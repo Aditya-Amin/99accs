@@ -11,10 +11,10 @@ return new class extends Migration
     {
         // ── Step 1: add nullable FK columns ───────────────────────────────────
         Schema::table('products', function (Blueprint $table) {
-            $table->unsignedBigInteger('game_id')->nullable()->after('type');
-            $table->unsignedBigInteger('account_type_id')->nullable()->after('game_id');
-            $table->unsignedBigInteger('region_id')->nullable()->after('account_type_id');
-            $table->unsignedBigInteger('section_id')->nullable()->after('region_id');
+            $table->unsignedBigInteger('game_id')->nullable();
+            $table->unsignedBigInteger('account_type_id')->nullable();
+            $table->unsignedBigInteger('region_id')->nullable();
+            $table->unsignedBigInteger('section_id')->nullable();
 
             $table->foreign('game_id')->references('id')->on('games')->nullOnDelete();
             $table->foreign('account_type_id')->references('id')->on('account_types')->nullOnDelete();
@@ -67,12 +67,12 @@ return new class extends Migration
     {
         // ── Restore old columns ───────────────────────────────────────────────
         Schema::table('products', function (Blueprint $table) {
-            $table->enum('game', ['valorant', 'fortnite', 'legends'])->nullable()->after('type');
-            $table->enum('account_type', ['verified', 'inactive_exclusive', 'nfa_random', 'nfa_guaranteed', 'nfa_inactive', 'standard'])->nullable()->after('game');
-            $table->string('region', 20)->nullable()->after('account_type');
-            $table->string('section_slug', 32)->nullable()->after('region')->index();
-            $table->string('section_label')->nullable()->after('section_slug');
-            $table->unsignedTinyInteger('section_order')->default(1)->after('section_label');
+            $table->enum('game', ['valorant', 'fortnite', 'legends'])->nullable();
+            $table->enum('account_type', ['verified', 'inactive_exclusive', 'nfa_random', 'nfa_guaranteed', 'nfa_inactive', 'standard'])->nullable();
+            $table->string('region', 20)->nullable();
+            $table->string('section_slug', 32)->nullable()->index();
+            $table->string('section_label')->nullable();
+            $table->unsignedTinyInteger('section_order')->default(1);
         });
 
         // ── Reverse-populate from FK tables ───────────────────────────────────
