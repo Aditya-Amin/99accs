@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import valorant from '@/mocks/products/valorant.json';
 import fortnite from '@/mocks/products/fortnite.json';
 import legends from '@/mocks/products/legends.json';
-import type { Product } from '@/lib/api/types';
+import type { Product, Region } from '@/lib/api/types';
 
 const all = [...valorant, ...fortnite, ...legends] as unknown as Product[];
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   if (minPrice) results = results.filter((p) => p.price >= parseFloat(minPrice));
   if (maxPrice) results = results.filter((p) => p.price <= parseFloat(maxPrice));
   if (rank) results = results.filter((p) => p.rank?.toLowerCase() === rank.toLowerCase());
-  if (region) results = results.filter((p) => p.region === region);
+  if (region) results = results.filter((p) => p.regions?.includes(region as Region));
   if (search) {
     const q = search.toLowerCase();
     results = results.filter(
