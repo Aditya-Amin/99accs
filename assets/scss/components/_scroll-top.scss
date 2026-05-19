@@ -1,0 +1,65 @@
+@use '../utils' as *;
+
+/*=============================
+    00. Scroll Top
+===============================*/
+.scroll__top {
+	width: 50px;
+    height: 50px;
+    @include flexbox();
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+	position: fixed;
+	bottom: -10%;
+	right: 50px;
+	font-size: 16px;
+	border-radius: 8px;
+	z-index: 99;
+	color: var(--tg-color-dark);
+	text-align: center;
+	cursor: pointer;
+	background: var(--tg-theme-primary);
+	transition: 1s ease;
+	border: none;
+    box-shadow: -1px -1px 0 0 #001c0c, 14px 14px 21px -4px rgba(0, 0, 0, 0.2), 6px 6px 8px -3px rgba(0, 0, 0, 0.19), 3px 3px 4px -2px rgba(0, 0, 0, 0.23), 1px 1px 2px -2px rgba(0, 0, 0, 0.25), 0px 0px 1px -1px rgba(0, 0, 0, 0.26), inset -1px -1px 1px 0 rgba(0, 0, 0, 0.23), inset 2px 2px 4px 0 rgba(255, 255, 255, 0.7);
+    @media #{$lg} {
+        right: 25px;
+        bottom: 25px;
+    }
+    @media #{$md} {
+        right: 30px;
+    }
+    @media #{$xs} {
+        right: 15px;
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+    }
+    &.open {
+        bottom: 30px;
+        @media #{$xs} {
+            bottom: 15px;
+        }
+    }
+    &::after {
+        position: absolute;
+        z-index: -1;
+        content: '';
+        top: 100%;
+        left: 5%;
+        height: 10px;
+        width: 90%;
+        opacity: 1;
+        background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 80%);
+    }
+    & svg {
+        width: 24px;
+        height: auto;
+    }
+    &:hover {
+        background: var(--tg-theme-secondary);
+        border-color: var(--tg-theme-secondary);
+        color: var(--tg-color-white-default);
+    }
+}

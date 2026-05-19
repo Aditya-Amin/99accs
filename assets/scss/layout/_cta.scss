@@ -1,0 +1,103 @@
+@use '../utils' as *;
+
+/*=============================
+    	06. Cta
+===============================*/
+.cta {
+    &__area {
+        position: relative;
+        z-index: 1;
+        height: 760px;
+        padding: 110px 0px 110px;
+        @include flexbox();
+        align-items: flex-end;
+        @media #{$xl} {
+            height: 625px;
+        }
+        @media #{$lg} {
+            height: 500px;
+            padding: 90px 0;
+        }
+        @media #{$md} {
+            height: 450px;
+        }
+        &::after,
+        &::before {
+            height: auto;
+            top: -2px;
+            bottom: 0;
+        }
+    }
+    &__content {
+        text-align: center;
+        & .title {
+            font-weight: 700;
+            font-size: 64px;
+            margin-bottom: 16px;
+            @media #{$lg} {
+                font-size: 56px;
+            }
+            @media #{$md} {
+                font-size: 50px;
+            }
+            @media #{$xs} {
+                font-size: 40px;
+            }
+        }
+    }
+    &__btn {
+        @include flexbox();
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        & a {
+            @include flexbox();
+            align-items: center;
+            box-shadow: -1px -1px 0 0 #001c0c, 14px 14px 21px -4px rgba(0, 0, 0, 0.2), 6px 6px 8px -3px rgba(0, 0, 0, 0.19), 3px 3px 4px -2px rgba(0, 0, 0, 0.23), 1px 1px 2px -2px rgba(0, 0, 0, 0.25), 0px 0px 1px -1px rgba(0, 0, 0, 0.26), inset -1px -1px 1px 0 rgba(0, 0, 0, 0.23), inset 2px 2px 4px 0 rgba(255, 255, 255, 0.7);
+            background: #24a1de;
+            color: var(--tg-color-white-default);
+            text-transform: uppercase;
+            font-weight: 600;
+            gap: 10px;
+            @include border-radius(4px);
+            padding: 13px 17px 11px;
+            &:nth-child(2) {
+                background: #5865F2;
+            }
+            &:hover {
+                transform: translateY(-3px);
+            }
+        }
+    }
+}
+
+#cta-particles {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.bg__overlay-top-two {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 290px;
+    background: linear-gradient(180deg, #000e06 0%, rgba(0, 14, 6, 0) 100%);
+    left: 0;
+    top: -2px;
+    z-index: -1;
+    &::after {
+        height: 218px;
+        content: "";
+        position: absolute;
+        width: 100%;
+        background: linear-gradient(180deg, #000e06 0%, rgba(0, 14, 6, 0) 100%);
+        left: 0;
+        top: 0;
+        z-index: -1;
+    }
+}

@@ -1,0 +1,195 @@
+@use '../utils' as *;
+
+/*=============================
+    	03. Banner
+===============================*/
+.banner {
+    &__bg {
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        z-index: 1;
+        padding: 185px 0 130px;
+        @media #{$xl} {
+            padding: 150px 0 100px;
+        }
+        @media #{$xs} {
+            padding: 110px 0 60px;
+        }
+    }
+    &__content {
+        text-align: center;
+        & .sub-title {
+            backdrop-filter: blur(20px);
+            background: rgba(0, 252, 112, 0.06);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--tg-theme-primary);
+            color: var(--tg-theme-primary);
+            @include border-radius(64px);
+            padding: 9px 12px;
+            margin-bottom: 32px;
+            @media #{$xl} {
+                margin-bottom: 20px;
+            }
+            & svg {
+                flex: 0 0 auto;
+            }
+        }
+        & .title {
+            font-size: 80px;
+            font-weight: 700;
+            line-height: 1.05;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.01em;
+            @media #{$xl} {
+                font-size: 70px;
+            }
+            @media #{$lg} {
+                font-size: 52px;
+            }
+            @media #{$md} {
+                font-size: 45px;
+            }
+            @media #{$xs} {
+                font-size: 38px;
+            }
+            & span {
+                color: var(--tg-theme-primary);
+            }
+        }
+        & p {
+            margin-bottom: 28px;
+            font-size: 21px;
+            @media #{$xl} {
+                margin-bottom: 20px;
+            }
+            @media #{$xs} {
+                font-size: 17px;
+            }
+        }
+    }
+    &__features {
+        & .list-wrap {
+            @include flexbox();
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px 40px;
+            margin-bottom: 60px;
+            @media #{$xl} {
+                margin-bottom: 30px;
+            }
+            & li {
+                @include flexbox();
+                align-items: center;
+                font-size: 17px;
+                gap: 10px;
+                @media #{$xs} {
+                    font-size: 15px;
+                }
+                & svg {
+                    color: var(--tg-theme-primary);
+                }
+            }
+        }
+    }
+    &__cat-wrap {
+        @include flexbox();
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        @media #{$xs} {
+            gap: 10px;
+        }
+        & img {
+            @include border-radius(8px);
+            &:hover {
+                transform: translateY(-3px);
+            }
+        }
+    }
+    &__shape {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+}
+
+
+.bg__overlay {
+    position: absolute;
+    width: 100%;
+    height: 180px;
+    left: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(0, 14, 6, 0) 0%, #000e06 100%);
+    z-index: -1;
+    &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 130px;
+        background: linear-gradient(180deg, rgba(0, 14, 6, 0) 0%, #000e06 100%);
+        z-index: -1;
+    }
+    &-top {
+        position: absolute;
+        width: 100%;
+        height: 180px;
+        left: 0;
+        top: 0;
+        background: linear-gradient(180deg, rgba(0, 14, 6, 0) 0%, #000e06 100%);
+        z-index: -1;
+        transform: rotate(180deg);
+        &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50px;
+            width: 100%;
+            height: 130px;
+            background: linear-gradient(180deg, rgba(0, 14, 6, 0) 0%, #000e06 100%);
+            z-index: -1;
+        }
+    }
+}
+
+.section__bg {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+    &::before,
+    &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 14, 6, 0.9);
+        opacity: .9;
+        mix-blend-mode: hue;
+        z-index: -1;
+    }
+    &::before {
+        mix-blend-mode: normal;
+    }
+}
+
+#banner-particles {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}

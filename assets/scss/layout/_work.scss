@@ -1,0 +1,105 @@
+@use '../utils' as *;
+
+/*=============================
+    	03. Work
+===============================*/
+.work {
+    &__item {
+        margin-bottom: 16px;
+        @include border-radius(8px);
+        position: relative;
+        z-index: 1;
+        background: linear-gradient(92deg, rgba(0, 252, 112, 0.05) 0%, rgba(0, 252, 112, 0.05) 100%);
+        &:last-child {
+            margin-bottom: 0;
+        }
+        ::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            padding: 1px;
+            border-radius: 8px;
+            background: linear-gradient(49deg,rgba(0, 252, 112, 1) 0%, rgba(0, 252, 112, 0) 100%);
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        &.active {
+            background: linear-gradient(92deg, rgba(0, 252, 112, 0.15) 0%, rgba(0, 252, 112, 0.15) 100%);
+            & .work__item-button {
+                padding: 24px 24px 6px 24px;
+            }
+        }
+        &-button {
+            font-weight: 600;
+            font-size: 22px;
+            color: var(--tg-color-white-default);
+            background: transparent;
+            padding: 0;
+            border: none;
+            padding: 24px 24px;
+            @include flexbox();
+            align-items: center;
+            gap: 24px;
+            width: 100%;
+            cursor: pointer;
+            text-align: left;
+            @media #{$lg} {
+                font-size: 20px;
+            }
+            & span {
+                width: 46px;
+                height: 46px;
+                @include flexbox();
+                align-items: center;
+                justify-content: center;
+                box-shadow: -1px -1px 0 0 #001c0c, 14px 14px 21px -4px rgba(0, 0, 0, 0.2), 6px 6px 8px -3px rgba(0, 0, 0, 0.19), 3px 3px 4px -2px rgba(0, 0, 0, 0.23), 1px 1px 2px -2px rgba(0, 0, 0, 0.25), 0px 0px 1px -1px rgba(0, 0, 0, 0.26), inset -1px -1px 1px 0 rgba(0, 0, 0, 0.23), inset 2px 2px 4px 0 rgba(255, 255, 255, 0.7);
+                background: var(--tg-theme-primary);
+                @include border-radius(4px);
+                font-weight: 500;
+                font-size: 20px;
+                color: var(--tg-color-dark);
+            }
+        }
+        &-wrap {
+            padding-right: 108px;
+            @media #{$xl} {
+                padding-right: 40px;
+            }
+            @media #{$lg} {
+                padding-right: 0px;
+            }
+        }
+    }
+    &__content {
+        padding: 0 24px 24px 95px;
+        & p {
+            margin: 0;
+            font-size: 17px;
+        }
+    }
+    &__img-wrap {
+        padding-left: 136px;
+        @media #{$xl} {
+            padding-left: 60px;
+        }
+        @media #{$lg} {
+            padding-left: 0px;
+            margin-top: 120px;
+        }
+        @media #{$md} {
+            margin-top: 40px;
+        }
+    }
+}
+
+.work__img {
+    display: none;
+}
+
+.work__img.active {
+    display: block;
+}

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xxd /d/cms-backend/core/Modules/Order/Services/CheckoutService.php)"
+    ]
+  }
+}

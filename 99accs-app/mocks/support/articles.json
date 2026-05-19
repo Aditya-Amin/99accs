@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "slug": "how-to-buy-account",
+    "title": "How to Buy a Game Account",
+    "category": "Getting Started",
+    "content": "Purchasing a game account on 99Accs is simple and secure. Browse our shop, select your desired account, add it to cart, and complete checkout. You will receive account credentials immediately via email.",
+    "created_at": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": 2,
+    "slug": "account-delivery",
+    "title": "How Does Account Delivery Work?",
+    "category": "Orders",
+    "content": "All accounts are delivered digitally. Once payment is confirmed, your account credentials are sent to your registered email address within minutes. You can also view your purchases in the My Account section.",
+    "created_at": "2025-01-02T00:00:00Z"
+  },
+  {
+    "id": 3,
+    "slug": "warranty-policy",
+    "title": "Our Warranty Policy",
+    "category": "Policy",
+    "content": "All accounts come with a 24-hour guarantee. If you experience any issue with your account within 24 hours of purchase, we will replace it free of charge. Please contact our support team immediately.",
+    "created_at": "2025-01-03T00:00:00Z"
+  },
+  {
+    "id": 4,
+    "slug": "payment-methods",
+    "title": "Accepted Payment Methods",
+    "category": "Payments",
+    "content": "We accept all major credit cards, PayPal, and cryptocurrency. All transactions are secured with SSL encryption. Your payment information is never stored on our servers.",
+    "created_at": "2025-01-04T00:00:00Z"
+  },
+  {
+    "id": 5,
+    "slug": "account-safety-tips",
+    "title": "Account Safety Tips",
+    "category": "Security",
+    "content": "After receiving your account, immediately change the password and link it to your email. Enable two-factor authentication. Do not share your account details with anyone. We recommend not linking any personal payment methods until the warranty period is over.",
+    "created_at": "2025-01-05T00:00:00Z"
+  },
+  {
+    "id": 6,
+    "slug": "refund-policy",
+    "title": "Refund Policy",
+    "category": "Policy",
+    "content": "Refunds are available within 24 hours of purchase if the account does not match its description. We do not offer refunds once you have logged into the account and changed the credentials. Contact support for any issues.",
+    "created_at": "2025-01-06T00:00:00Z"
+  }
+]

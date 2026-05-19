@@ -1,0 +1,34 @@
+{
+  "background_image": "/img/bg/testimonial_bg.png",
+  "title": "What our customers are saying",
+  "items": [
+    {
+      "id": 1,
+      "title": "Good iam recommended this",
+      "text": "Good iam recommended this. everyone. Its absolutely amazing. I already bought like 9 accounts been around 3 months now and I had no issues with none. 100% recommended it.",
+      "author": "Best Films",
+      "rating": 5
+    },
+    {
+      "id": 2,
+      "title": "Good like, recomended!",
+      "text": "Unbeatable delivery times - this store is on another level! i bought a fortnite account and everything was fine, two-factor authentication was removed and my native email was issued along with the password. There are 250+skins on the account as written on the website!",
+      "author": "stanislav",
+      "rating": 5
+    },
+    {
+      "id": 3,
+      "title": "Amazing accounts",
+      "text": "Amazing accounts, very low price! INSTANT delivery love it",
+      "author": "Orbitaz_",
+      "rating": 5
+    },
+    {
+      "id": 4,
+      "title": "Best for skinned accounts",
+      "text": "I bought from them 3 times and all 3 of the times i got accounts with very good skins on them, i got some problem with first credentials that they gave to me but always got a replacement that worked fine",
+      "author": "Erik",
+      "rating": 5
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+@use '../utils' as *;
+
+/*=============================
+	 Button style
+===============================*/
+.tg-button-wrap {
+    @include flexbox();
+}
+.tg-btn {
+    user-select: none;
+    -moz-user-select: none;
+    background: var(--tg-theme-primary) none repeat scroll 0 0;
+    border: none;
+    color: var(--tg-color-dark);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    font-size: 15px;
+    font-weight: var(--tg-fw-semi-bold);
+    font-family: var(--tg-heading-font-family);
+    letter-spacing: 0;
+    line-height: 1;
+    margin-bottom: 0;
+    padding: 16px 17px;
+    text-align: center;
+    text-transform: uppercase;
+    touch-action: manipulation;
+    @include transition(.3s);
+    vertical-align: middle;
+    @include border-radius(4px);
+    white-space: nowrap;
+    overflow: hidden;
+    box-shadow: -1px -1px 0 0 #001c0c, 14px 14px 21px -4px rgba(0, 0, 0, 0.2), 6px 6px 8px -3px rgba(0, 0, 0, 0.19), 3px 3px 4px -2px rgba(0, 0, 0, 0.23), 1px 1px 2px -2px rgba(0, 0, 0, 0.25), 0px 0px 1px -1px rgba(0, 0, 0, 0.26), inset -1px -1px 1px 0 rgba(0, 0, 0, 0.23), inset 2px 2px 4px 0 rgba(255, 255, 255, 0.7);
+    gap: 15px;
+    &:hover,
+    &:focus-visible {
+        box-shadow: none;
+        backdrop-filter: blur(20px);
+        background: rgba(0, 252, 112, 0.1);
+        color: var(--tg-theme-primary);
+    }
+}

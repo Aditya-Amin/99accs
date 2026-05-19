@@ -1,0 +1,36 @@
+{
+  "background_image": "/img/bg/work_bg.png",
+  "title": "How does it work?",
+  "steps": [
+    {
+      "id": 1,
+      "num": "01",
+      "title": "Select an Account",
+      "text": "Browse through our store and pick the account that best suits your preferences."
+    },
+    {
+      "id": 2,
+      "num": "02",
+      "title": "Enter Your Email Address",
+      "text": "Browse through our store and pick the account that best suits your preferences."
+    },
+    {
+      "id": 3,
+      "num": "03",
+      "title": "Complete Payment",
+      "text": "Browse through our store and pick the account that best suits your preferences."
+    },
+    {
+      "id": 4,
+      "num": "04",
+      "title": "Instant Delivery",
+      "text": "Browse through our store and pick the account that best suits your preferences."
+    }
+  ],
+  "images": [
+    "/img/images/work_img_01.png",
+    "/img/images/work_img_02.png",
+    "/img/images/work_img_03.png",
+    "/img/images/work_img_04.png"
+  ]
+}

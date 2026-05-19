@@ -1,0 +1,18 @@
+{
+  "background_image": "/img/bg/cta_bg.jpg",
+  "title_lines": ["JOIN THE", "COMMUNITY"],
+  "buttons": [
+    {
+      "id": 1,
+      "platform": "telegram",
+      "label": "Join telegram",
+      "url": "https://web.telegram.org/"
+    },
+    {
+      "id": 2,
+      "platform": "discord",
+      "label": "Join Discord",
+      "url": "https://discord.com/"
+    }
+  ]
+}

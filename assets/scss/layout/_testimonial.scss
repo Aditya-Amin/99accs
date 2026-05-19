@@ -1,0 +1,84 @@
+@use '../utils' as *;
+
+/*=============================
+    	05. Testimonial
+===============================*/
+.testimonial {
+    &__area {
+        padding: 130px 0 80px;
+        @media #{$md} {
+            padding: 100px 0 50px;
+        }
+        @media #{$xs} {
+            padding: 60px 0 40px;
+        }
+    }
+    &__item {
+        padding: 40px 48px 12px;
+        min-height: 336px;
+        border-right: 1px solid #1f2b24;
+        margin-right: -1px;
+        @media #{$xl} {
+            padding: 30px 25px 12px;
+        }
+        @media #{$lg} {
+            padding: 30px 20px 12px;
+        }
+        & .rating {
+            @include flexbox();
+            align-items: center;
+            color: var(--tg-theme-primary);
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+        & .title {
+            margin-bottom: 10px;
+            font-weight: 500;
+            font-size: 22px;
+            overflow: hidden;
+            -o-text-overflow: ellipsis;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+        }
+        & p {
+            margin: 0 0 16px;
+        }
+        & span {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            font-size: 15px;
+        }
+        &-wrap {
+            border-top: 1px solid #1f2b24;
+        }
+    }
+    &-active {
+        & .swiper-slide-prev {
+            & .testimonial__item {
+                border: none;
+            }
+        }
+    }
+    &-pagination {
+        @include flexbox();
+        align-items: center;
+        justify-content: center;
+        margin: 40px auto 0;
+        gap: 10px;
+        & .swiper-pagination-bullet {
+            width: 8px !important;
+            height: 8px !important;
+            margin: 0 !important;
+            background: rgba(255, 255, 255, 0.15);
+            opacity: 1;
+            transform: scale(1) !important;
+            @include transition(.3s);
+            &-active {
+                background: var(--tg-color-white-default);
+            }
+        }
+    }
+}
+

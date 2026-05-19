@@ -1,0 +1,90 @@
+@use '../utils' as *;
+
+/*=============================
+    	04. About
+===============================*/
+.about {
+    &__bg {
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        z-index: 1;
+    }
+    &__img {
+        position: relative;
+        margin-right: -24px;
+        @media #{$lg} {
+            margin-right: 0;
+        }
+        @media #{$md} {
+            margin-bottom: 30px;
+        }
+        &::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--tg-theme-primary);
+            filter: blur(84px);
+            border-radius: 100%;
+            width: 362px;
+            height: 362px;
+            z-index: -1;
+        }
+    }
+    &__content {
+        padding-left: 120px;
+        @media #{$xl} {
+            padding-left: 40px;
+        }
+        @media #{$lg} {
+            padding-left: 0;
+        }
+        & > p {
+            margin-bottom: 18px;
+            font-size: 17px;
+        }
+        &-bottom {
+            @include flexbox();
+            align-items: center;
+            gap: 30px 100px;
+            flex-wrap: wrap;
+            margin-top: 60px;
+            @media #{$lg} {
+                gap: 20px 50px;
+                margin-top: 40px;
+            }
+            @media #{$xs} {
+                gap: 20px 35px;
+            }
+        }
+    }
+}
+
+.counter__item {
+    & .counter-number {
+        margin-bottom: 8px;
+        font-weight: 700;
+        font-size: 64px;
+        color: var(--tg-theme-primary);
+        line-height: 1;
+        @media #{$xl} {
+            font-size: 55px;
+        }
+        @media #{$lg} {
+            font-size: 48px;
+        }
+        @media #{$xs} {
+            font-size: 40px;
+        }
+    }
+    & p {
+        margin-bottom: 0;
+        font-weight: 500;
+        font-size: 20px;
+        @media #{$xs} {
+            font-size: 18px;
+        }
+    }
+}

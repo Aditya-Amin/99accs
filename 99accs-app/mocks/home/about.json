@@ -1,0 +1,14 @@
+{
+  "background_image": "/img/bg/about_bg.png",
+  "image": "/img/images/about_img.png",
+  "title": "We help you play your way and enjoy your games",
+  "paragraphs": [
+    "Since 2020, 99access has connected dedicated gamers and top-tier professionals, all to elevate your gaming experience.",
+    "We understand gaming culture and recognize your passion. Your triumphs drive us, and we're committed to helping you achieve greatness in every game.",
+    "Your in-game progress shapes you as a player. With 99access, each achievement unlocks new possibilities, helping you develop and reach unprecedented levels."
+  ],
+  "stats": {
+    "happy_customers": 48345,
+    "accounts_sold": 67234
+  }
+}

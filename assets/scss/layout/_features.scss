@@ -1,0 +1,64 @@
+@use '../utils' as *;
+
+/*=============================
+    	05. Features
+===============================*/
+.features {
+    &__content {
+        &-wrap {
+            padding-right: 100px;
+            @media #{$xl} {
+                padding-right: 45px;
+            }
+            @media #{$lg} {
+                padding-right: 0;
+            }
+            @media #{$md} {
+                margin-bottom: 50px;
+            }
+        }
+    }
+    &__item {
+        background: linear-gradient(180deg, rgba(1, 236, 105, 0.05) 0%, rgba(1, 236, 105, 0.05) 100%);
+        position: relative;
+        z-index: 1;
+        padding: 25px 25px;
+        overflow: hidden;
+        @include border-radius(8px);
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            padding: 1px;
+            border-radius: 8px;
+            background: linear-gradient(180deg, rgb(0, 252, 112) 0%, rgba(0, 252, 112, 0) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        & .shape {
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: -1;
+        }
+        &-wrap {
+            padding-left: 16px;
+            & .row {
+                --bs-gutter-y: 46px;
+            }
+        }
+    }
+    &__content {
+        & .title {
+            font-weight: 600;
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        & p {
+            margin: 0;
+            font-size: 17px;
+        }
+    }
+}

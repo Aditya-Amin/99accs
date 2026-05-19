@@ -1,0 +1,77 @@
+@use '../utils' as *;
+
+/*=========================
+      Breadcrumb
+===========================*/
+.breadcrumb {
+    &__area {
+        padding: 135px 0 20px;
+        @media #{$xs} {
+            padding: 110px 0 20px;
+        }
+        &-two {
+            position: relative;
+            z-index: 1;
+        }
+    }
+    &__content {
+        & .breadcrumb {
+            @include flexbox();
+            align-items: center;
+            gap: 4px;
+            & span {
+                font-weight: 400;
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 15px;
+                display: inline-flex;
+                align-items: center;
+                & a {
+                    color: rgba(255, 255, 255, 0.5);
+                    &:hover {
+                        color: var(--tg-theme-primary);
+                    }
+                }
+                & img {
+                    width: 20px;
+                    margin-left: 5px;
+                }
+                &.breadcrumb-separator {
+                    line-height: 0;
+                }
+            }
+        }
+        &-two {
+            text-align: center;
+            padding: 145px 0 130px;
+            @media #{$xl} {
+                padding: 130px 0 100px;
+            }
+            @media #{$lg} {
+                padding: 130px 0 80px;
+            }
+            @media #{$xs} {
+                padding: 115px 0 70px;
+            }
+            & .breadcrumb {
+                justify-content: center;
+                margin-bottom: 12px;
+            }
+            & .title {
+                margin-bottom: 0;
+                font-size: 64px;
+                text-transform: uppercase;
+                line-height: 1;
+                font-weight: 700;
+                @media #{$xl} {
+                    font-size: 55px;
+                }
+                @media #{$lg} {
+                    font-size: 50px;
+                }
+                @media #{$xs} {
+                    font-size: 40px;
+                }
+            }
+        }
+    }
+}
