@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('product_skin');
+        Schema::dropIfExists('skins');
+
         // Skin taxonomy terms (e.g. "Prime Vandal", "Reaver Karambit", "Gold Midas")
         Schema::create('skins', function (Blueprint $table) {
             $table->id();
