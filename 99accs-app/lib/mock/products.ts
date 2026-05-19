@@ -1,4 +1,4 @@
-import type { Product } from '@/lib/api/types';
+import type { Product, Region } from '@/lib/api/types';
 import valorant from '@/mocks/products/valorant.json';
 import fortnite from '@/mocks/products/fortnite.json';
 import legends from '@/mocks/products/legends.json';
@@ -31,7 +31,7 @@ export function getMockProducts(filters: MockProductFilters = {}) {
   if (min_price !== undefined) results = results.filter((p) => p.price >= min_price);
   if (max_price !== undefined) results = results.filter((p) => p.price <= max_price);
   if (rank) results = results.filter((p) => p.rank?.toLowerCase() === rank.toLowerCase());
-  if (region) results = results.filter((p) => p.region === region);
+  if (region) results = results.filter((p) => p.regions?.includes(region as Region));
   if (search) {
     const q = search.toLowerCase();
     results = results.filter((p) => p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
