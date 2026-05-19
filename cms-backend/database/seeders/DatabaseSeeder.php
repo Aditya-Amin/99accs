@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             ProductSeeder::class,
+            SkinTaxonomyMigrationSeeder::class,
             ProductDetailSeeder::class,
         ]);
     }
