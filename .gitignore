@@ -12,6 +12,9 @@
 # MySQL socket/data files
 cms-backend/dbdata/
 
+# Dependencies
+node_modules/
+
 # OS
 .DS_Store
 Thumbs.db
