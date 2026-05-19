@@ -63,12 +63,7 @@ return new class extends Migration
                     ->update(['skin_ids' => json_encode(array_values($ids))]);
             });
 
-        // ── 6. Multi-value indexes (MySQL 8.0.17+) — fast JSON_CONTAINS ───────
-        // Standard Blueprint doesn't expose this — use raw DDL.
-        DB::statement('ALTER TABLE products ADD INDEX idx_prod_region_ids ((CAST(region_ids AS UNSIGNED ARRAY)))');
-        DB::statement('ALTER TABLE products ADD INDEX idx_prod_skin_ids   ((CAST(skin_ids   AS UNSIGNED ARRAY)))');
-
-        // ── 7. Drop old single-value region FK ────────────────────────────────
+        // ── 6. Drop old single-value region FK ────────────────────────────────
         Schema::table('products', function (Blueprint $table) {
             $table->dropForeign(['region_id']);
             $table->dropColumn('region_id');
@@ -77,10 +72,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Remove multi-value indexes
-        DB::statement('ALTER TABLE products DROP INDEX idx_prod_region_ids');
-        DB::statement('ALTER TABLE products DROP INDEX idx_prod_skin_ids');
-
         Schema::table('products', function (Blueprint $table) {
             $table->dropColumn(['region_ids', 'skin_ids']);
         });
