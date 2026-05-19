@@ -11,7 +11,9 @@ class ProductSeeder extends Seeder
     {
         $this->command->info('Seeding products from Next.js mock data...');
 
-        $mockPath = base_path('../99accs-app/mocks/products');
+        $mockPath = file_exists(base_path('../99accs-app/mocks/products'))
+            ? base_path('../99accs-app/mocks/products')
+            : storage_path('app/mock-products');
 
         $files = ['valorant', 'fortnite', 'legends'];
         $all   = [];
