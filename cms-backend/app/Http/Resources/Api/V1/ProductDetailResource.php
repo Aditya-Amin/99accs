@@ -20,12 +20,22 @@ class ProductDetailResource extends ProductListResource
             'locker'               => $this->locker,
             'seasons'              => $this->seasons,
             'description_sections' => $this->description_sections,
+            'faq_items'            => $this->faq_items ?? [],
             'min_quantity'         => $this->min_quantity,
             'last_match_label'     => $this->last_match_label,
-            'guarantee'            => $this->guarantee,
+            'guarantee'            => $this->guarantee_title ? [
+                'title' => $this->guarantee_title,
+                'body'  => $this->guarantee_body,
+            ] : null,
             'related'              => ProductListResource::collection(
                 $this->whenLoaded('related')
             ),
+            // SEO — consumed by Next.js generateMetadata() on /product/[slug]
+            'meta_title'           => $this->meta_title,
+            'meta_description'     => $this->meta_description,
+            'meta_keywords'        => $this->meta_keywords,
+            'is_cornerstone'       => (bool) $this->is_cornerstone,
+            'canonical_url'        => $this->canonical_url,
         ]);
     }
 }

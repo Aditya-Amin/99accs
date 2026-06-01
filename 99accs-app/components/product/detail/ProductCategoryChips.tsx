@@ -9,15 +9,16 @@ interface ProductCategoryChipsProps {
 }
 
 export default function ProductCategoryChips({ categories, game, extraChip }: ProductCategoryChipsProps) {
-  if (!categories.length && !extraChip) return null;
+  const cats = categories ?? [];
+  if (!cats.length && !extraChip) return null;
 
   return (
     <ul className="shop__tag-wrap list-wrap">
-      {categories.map((cat) => {
+      {cats.map((cat) => {
         const Icon = CATEGORY_ICONS[cat.icon];
         return (
           <li key={cat.id}>
-            <Link href={`/shop/${game}`}>
+            <Link href={`/product-category/${game}`}>
               {Icon ? <Icon /> : null}
               {cat.label}
             </Link>
@@ -26,7 +27,7 @@ export default function ProductCategoryChips({ categories, game, extraChip }: Pr
       })}
       {extraChip && (
         <li>
-          <Link href={`/shop/${game}`}>
+          <Link href={`/product-category/${game}`}>
             {extraChip.icon}
             {extraChip.label}
           </Link>

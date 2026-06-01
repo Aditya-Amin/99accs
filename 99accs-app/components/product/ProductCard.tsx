@@ -18,7 +18,7 @@ export default function ProductCard({ product }: Props) {
   const layout = accountTypeToLayout(product.account_type);
   const useThumbTwo = layout !== 'simple_two';
 
-  const detailHref = `/shop/${product.game}/${product.slug}`;
+  const detailHref = `/product/${product.slug}`;
   const showGallery = !!product.has_gallery && product.images.length > 1;
   const showCountry = !!product.country.code;
   const countryClass = product.country.class_modifier ?? product.country.code.toLowerCase();
@@ -73,13 +73,13 @@ export default function ProductCard({ product }: Props) {
           )}
         </div>
 
-        {product.categories.length > 0 && (
+        {(product.categories?.length ?? 0) > 0 && (
           <ul className="shop__tag-wrap list-wrap">
-            {product.categories.map((cat) => {
+            {(product.categories ?? []).map((cat) => {
               const Icon = CATEGORY_ICONS[cat.icon];
               return (
                 <li key={cat.id}>
-                  <Link href={`/shop/${product.game}`}>
+                  <Link href={`/product-category/${product.game}`}>
                     {Icon ? <Icon /> : null}
                     {cat.label}
                   </Link>
@@ -91,8 +91,7 @@ export default function ProductCard({ product }: Props) {
 
         <h2 className="price">
           ${product.price.toFixed(2)}
-          {product.price_max ? ` – $${product.price_max.toFixed(2)}` : ''}
-          {product.old_price ? <del>${product.old_price.toFixed(2)}</del> : null}
+          {product.regular_price ? <del>${product.regular_price.toFixed(2)}</del> : null}
         </h2>
 
         <button onClick={() => addItem(product)} className="tg-btn">

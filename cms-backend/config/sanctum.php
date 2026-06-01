@@ -46,7 +46,10 @@ return [
     |
     */
 
-    'expiration' => null,
+    // 24h token lifetime. The Next.js BFF holds the token in an httpOnly cookie
+    // with the same maxAge — when the cookie expires, the user re-logs in. Tune
+    // via SANCTUM_TOKEN_EXPIRATION in .env if needed (value is in minutes).
+    'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION', 60 * 24),
 
     /*
     |--------------------------------------------------------------------------

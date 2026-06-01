@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 interface Props {
   sessionId: string;
+  paymentMethod?: string;
   disabled: boolean;
   onSuccess: () => void;
   onError: (msg: string) => void;
@@ -12,16 +13,18 @@ interface Props {
 // shape; in production this calls stripe.confirmPayment with return_url and
 // the user is redirected by Stripe. Until Stripe is wired, we just call
 // onSuccess so the order page can be reached.
-export function PayNowButton({ sessionId, disabled, onSuccess, onError }: Props) {
+export function PayNowButton({ sessionId, paymentMethod, disabled, onSuccess, onError }: Props) {
   const [submitting, setSubmitting] = useState(false);
 
   const handlePay = async () => {
     if (disabled || submitting) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/mock/checkout/${sessionId}/pay`, {
+      const res = await fetch(`/api/checkout/${sessionId}/pay`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({ payment_method: paymentMethod }),
       });
       if (!res.ok) {
         const raw = (await res.json().catch(() => ({}))) as { message?: string };

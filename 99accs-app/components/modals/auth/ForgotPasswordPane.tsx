@@ -14,15 +14,20 @@ export function ForgotPasswordPane() {
     setError('');
     try {
       const fd = new FormData(e.currentTarget);
-      const res = await fetch('/api/mock/forgot-password', {
+      const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: fd.get('email') }),
       });
-      if (!res.ok) throw new Error('Failed');
+      // Backend returns 200 for both "sent" and "no such account" (anti-
+      // enumeration). Only true network/server errors surface here.
+      if (!res.ok && res.status !== 200) {
+        const body = (await res.json().catch(() => ({}))) as { message?: string };
+        throw new Error(body.message ?? 'Could not send reset link.');
+      }
       setSent(true);
-    } catch {
-      setError('Could not send reset link. Try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send reset link. Try again.');
     } finally {
       setLoading(false);
     }

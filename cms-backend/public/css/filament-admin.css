@@ -1,214 +1,266 @@
 /*
- * Filament admin — unified WordPress-style image upload.
+ * Filament admin — global UI enhancements.
  * Loaded via AdminPanelProvider → renderHook(HEAD_END).
- * Pair with App\Forms\Components\ImageTileUpload.
+ * No build step — edit directly; cache-buster is filemtime().
  */
 
-/* ────────────────────────────────────────────────────────────────────────
-   1. KILL Filepond's broken image preview
-   ────────────────────────────────────────────────────────────────────────
-   .filepond--image-clip / .filepond--image-canvas-wrapper often get stuck
-   at 0×0 in edit mode. Our Blade view renders the saved image itself, so
-   hide Filepond's preview machinery and keep just the upload row.
-*/
-.image-tile-upload__dropzone .filepond--image-preview-wrapper,
-.image-tile-upload__dropzone .filepond--image-preview-overlay,
-.image-tile-upload__dropzone .filepond--image-preview,
-.image-tile-upload__dropzone .filepond--image-clip,
-.image-tile-upload__dropzone .filepond--image-canvas-wrapper,
-.image-tile-upload__dropzone .filepond--image-bitmap,
-.image-tile-upload__dropzone .filepond--action-edit-item {
-    display: none !important;
-}
-
-/* Filepond reserves vertical space for the preview based on imagePreviewHeight
-   — clear so the row stays compact. */
-.image-tile-upload__dropzone .filepond--item {
-    height: auto !important;
-    min-height: 0 !important;
-}
-
-/* ────────────────────────────────────────────────────────────────────────
-   2. UNIFIED WIDGET — preview tile fused with dropzone in one card
-   ──────────────────────────────────────────────────────────────────────── */
-.image-tile-upload {
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px -4px rgba(15,23,42,0.06);
+/* ════════════════════════════════════════════════════════════════════
+   1. SECTION CARDS  (.fi-section)
+   ════════════════════════════════════════════════════════════════════ */
+.fi-section {
+    border-radius: 14px !important;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 2px 8px -2px rgba(15,23,42,0.05) !important;
     transition: box-shadow 0.2s ease;
 }
-.image-tile-upload:hover {
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 10px 32px -8px rgba(15,23,42,0.14);
+.fi-section:hover {
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 6px 20px -4px rgba(15,23,42,0.10) !important;
 }
-.dark .image-tile-upload {
-    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-    border-color: rgba(255, 255, 255, 0.08);
+.dark .fi-section {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25), 0 2px 8px -2px rgba(0,0,0,0.2) !important;
 }
-
-/* ── Preview row (top) ──────────────────────────────────────────────── */
-.image-tile-upload__preview {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 20px;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(241,245,249,0.4) 100%);
-}
-.dark .image-tile-upload__preview {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(15,23,42,0.3) 100%);
+.dark .fi-section:hover {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 6px 20px -4px rgba(0,0,0,0.3) !important;
 }
 
-/* The square frame holding the actual image */
-.image-tile-upload__frame {
-    flex: 0 0 auto;
-    width: 160px;
-    height: 160px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f1f5f9;
-    background-image:
-        linear-gradient(45deg, rgba(15,23,42,0.05) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(15,23,42,0.05) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(15,23,42,0.05) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(15,23,42,0.05) 75%);
-    background-size: 14px 14px;
-    background-position: 0 0, 0 7px, 7px -7px, -7px 0;
-    border-radius: 10px;
-    border: 1px solid rgba(15, 23, 42, 0.06);
-    padding: 12px;
-    overflow: hidden;
-}
-.dark .image-tile-upload__frame {
-    background-color: rgba(255, 255, 255, 0.03);
-    background-image:
-        linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(255,255,255,0.05) 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.05) 75%),
-        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.05) 75%);
-    border-color: rgba(255, 255, 255, 0.06);
+/* Amber left-border accent on header */
+.fi-section-header {
+    border-left: 3px solid rgb(245, 158, 11) !important;
+    padding-left: calc(1.5rem - 3px) !important;
 }
 
-.image-tile-upload__frame img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
-    transition: transform 0.25s cubic-bezier(.2,.7,.2,1);
-}
-.image-tile-upload:hover .image-tile-upload__frame img {
-    transform: scale(1.04);
+/* Section icon — amber tint */
+.fi-section-header-icon {
+    color: rgb(245, 158, 11) !important;
+    opacity: 0.9;
 }
 
-/* Empty-state frame: dashed border + grey SVG */
-.image-tile-upload__frame--empty {
-    border-style: dashed;
-    border-width: 1.5px;
-}
-.image-tile-upload__frame--empty svg {
-    width: 64px;
-    height: 64px;
-    color: rgba(15, 23, 42, 0.25);
-}
-.dark .image-tile-upload__frame--empty svg {
-    color: rgba(255, 255, 255, 0.20);
+/* Section title — slightly bolder */
+.fi-section-heading {
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
 }
 
-/* Metadata column (label + filename / hint) */
-.image-tile-upload__meta {
+/* Section description — muted and smaller */
+.fi-section-description {
+    font-size: 0.8125rem !important;
+    line-height: 1.45 !important;
+    opacity: 0.75;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   2. REPEATER ITEMS  (.fi-fo-repeater-item)
+   ════════════════════════════════════════════════════════════════════ */
+.fi-fo-repeater-item {
+    border-radius: 10px !important;
+    border: 1px solid rgba(15,23,42,0.08) !important;
+    background: rgba(248,250,252,0.9) !important;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04) !important;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.fi-fo-repeater-item:hover {
+    border-color: rgba(245, 158, 11, 0.25) !important;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px -3px rgba(245,158,11,0.12) !important;
+}
+.dark .fi-fo-repeater-item {
+    background: rgba(30,41,59,0.6) !important;
+    border-color: rgba(255,255,255,0.07) !important;
+}
+.dark .fi-fo-repeater-item:hover {
+    border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Repeater item header — subtle separator */
+.fi-fo-repeater-item-header {
+    border-bottom: 1px solid rgba(15,23,42,0.06) !important;
+    background: rgba(248,250,252,0.5) !important;
+    border-radius: 10px 10px 0 0 !important;
+}
+.dark .fi-fo-repeater-item-header {
+    background: rgba(15,23,42,0.25) !important;
+    border-bottom-color: rgba(255,255,255,0.05) !important;
+}
+
+/* "Add …" action button — dashed outline style */
+.fi-fo-repeater-add-item-btn {
+    border-radius: 8px !important;
+    border-style: dashed !important;
+    border-width: 1.5px !important;
+    font-weight: 500 !important;
+    transition: background 0.15s ease, border-color 0.15s ease !important;
+}
+.fi-fo-repeater-add-item-btn:hover {
+    background: rgba(245, 158, 11, 0.06) !important;
+    border-color: rgb(245, 158, 11) !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   3. TAB BAR  (.fi-tabs)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Active tab — amber underline */
+.fi-tabs-item-active-btn,
+[data-active] .fi-tabs-item-btn {
+    color: rgb(180, 113, 2) !important;
+}
+.dark .fi-tabs-item-active-btn,
+.dark [data-active] .fi-tabs-item-btn {
+    color: rgb(245, 158, 11) !important;
+}
+
+/* Tighten tab padding */
+.fi-tabs-item-btn {
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
+    font-weight: 500 !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   4. IMAGE CARD UPLOAD  (.image-card-upload)
+   ════════════════════════════════════════════════════════════════════ */
+
+.image-card-upload .filepond--root {
+    height: 200px !important;
+    border-radius: 14px !important;
+    border: 2px dashed rgba(15, 23, 42, 0.18) !important;
+    background: rgba(248, 250, 252, 0.7) !important;
+    overflow: hidden !important;
+    margin-bottom: 0 !important;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.dark .image-card-upload .filepond--root {
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    background: rgba(30, 41, 59, 0.55) !important;
+}
+.image-card-upload .filepond--root:hover {
+    border-color: rgb(245, 158, 11) !important;
+    background: rgba(245, 158, 11, 0.04) !important;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.10) !important;
+}
+.image-card-upload .filepond--root.filepond--hopper-drop-here {
+    border-color: rgb(245, 158, 11) !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+}
+.image-card-upload .filepond--root:has(.filepond--item) {
+    border-style: solid !important;
+    border-color: rgba(15, 23, 42, 0.12) !important;
+    background: #0f172a !important;
+    cursor: default;
+}
+.dark .image-card-upload .filepond--root:has(.filepond--item) {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.image-card-upload .filepond--drop-label {
+    height: 200px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+}
+.image-card-upload .filepond--drop-label label {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    min-width: 0;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    padding: 24px;
+    color: rgb(100, 116, 139);
+    text-align: center;
+    line-height: 1;
 }
-.image-tile-upload__label {
-    font-size: 12px;
-    font-weight: 700;
-    color: rgb(71, 85, 105);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-.dark .image-tile-upload__label {
+.dark .image-card-upload .filepond--drop-label label {
     color: rgb(148, 163, 184);
 }
-.image-tile-upload__filename {
-    font-size: 14px;
-    color: rgb(15, 23, 42);
-    word-break: break-all;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+.image-card-upload .upload-idle-icon {
+    width: 52px;
+    height: 52px;
+    color: rgba(245, 158, 11, 0.7);
+    display: block;
 }
-.dark .image-tile-upload__filename {
+.dark .image-card-upload .upload-idle-icon {
+    color: rgba(245, 158, 11, 0.8);
+}
+.image-card-upload .upload-idle-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+.image-card-upload .upload-idle-label strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgb(51, 65, 85);
+}
+.dark .image-card-upload .upload-idle-label strong {
     color: rgb(226, 232, 240);
 }
-
-/* ── Dropzone row (bottom, integrated) ─────────────────────────────── */
-/* Filepond renders inside this. We remove its standalone borders/radius
-   so it feels like the lower half of the same card. */
-.image-tile-upload__dropzone {
-    padding: 12px 16px;
-}
-.image-tile-upload__dropzone .filepond--root {
-    border-radius: 10px;
-    border: 1.5px dashed rgba(15, 23, 42, 0.15);
-    background: rgba(248, 250, 252, 0.6);
-    transition: border-color 0.2s ease, background 0.2s ease;
-    min-height: 76px;
-}
-.dark .image-tile-upload__dropzone .filepond--root {
-    border-color: rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.02);
-}
-.image-tile-upload__dropzone .filepond--root:hover,
-.image-tile-upload__dropzone .filepond--root.filepond--hopper-drop-here {
-    border-color: rgb(245, 158, 11); /* amber-500 */
-    background: rgba(245, 158, 11, 0.06);
-}
-
-.image-tile-upload__dropzone .filepond--drop-label {
-    color: rgb(71, 85, 105);
-    font-weight: 500;
-    min-height: 76px;
-}
-.dark .image-tile-upload__dropzone .filepond--drop-label {
-    color: rgb(148, 163, 184);
-}
-
-/* Action buttons (remove, retry) */
-.image-tile-upload__dropzone .filepond--file-action-button {
-    background-color: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    border-radius: 9999px;
-    transition: background-color 0.15s ease, transform 0.15s ease;
-}
-.image-tile-upload__dropzone .filepond--file-action-button.filepond--action-remove-item:hover {
-    background-color: rgba(220, 38, 38, 0.9);
-    transform: scale(1.08);
-}
-
-/* Filename text after upload */
-.image-tile-upload__dropzone .filepond--file-info-main {
-    font-weight: 500;
-}
-.image-tile-upload__dropzone .filepond--file-info-sub {
-    color: rgb(100, 116, 139);
-}
-
-/* Progress + status indicators in panel primary color */
-.image-tile-upload__dropzone .filepond--load-indicator,
-.image-tile-upload__dropzone .filepond--progress-indicator {
+.image-card-upload .filepond--label-action {
     color: rgb(245, 158, 11);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(245, 158, 11, 0.4);
+    padding-bottom: 1px;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.image-card-upload .filepond--label-action:hover {
+    color: rgb(180, 113, 2);
+    border-bottom-color: rgb(180, 113, 2);
+}
+.image-card-upload .filepond--panel-root {
+    background: #0f172a !important;
+    border-radius: 12px !important;
+}
+.image-card-upload .filepond--image-preview-wrapper {
+    background: #0f172a !important;
+    border-radius: 12px !important;
+}
+.image-card-upload .filepond--image-preview-overlay--idle,
+.image-card-upload .filepond--image-preview-overlay--success {
+    background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.08) 55%, transparent 100%);
+    opacity: 1 !important;
+}
+.image-card-upload .filepond--file-info-main {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+.image-card-upload .filepond--file-info-sub {
+    font-size: 10px !important;
+    color: rgba(255, 255, 255, 0.55) !important;
+}
+.image-card-upload .filepond--file-action-button {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 50% !important;
+    background: rgba(15, 23, 42, 0.68) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
+}
+.image-card-upload .filepond--action-remove-item:hover {
+    background: rgba(220, 38, 38, 0.88) !important;
+    border-color: rgba(220, 38, 38, 0.4) !important;
+    transform: scale(1.1) !important;
+}
+.image-card-upload .filepond--action-edit-item {
+    display: none !important;
+}
+.image-card-upload .filepond--load-indicator,
+.image-card-upload .filepond--progress-indicator {
+    color: rgb(245, 158, 11) !important;
 }
 
-/* ────────────────────────────────────────────────────────────────────────
-   3. TABLE ImageColumn  (e.g. Regions list flag thumbnail)
-   ──────────────────────────────────────────────────────────────────────── */
+
+/* ════════════════════════════════════════════════════════════════════
+   5. TABLE ImageColumn thumbnails
+   ════════════════════════════════════════════════════════════════════ */
 .fi-ta-image-column-image {
     object-fit: contain !important;
     width: auto !important;
@@ -228,4 +280,694 @@
 .dark .fi-ta-image-column-image {
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Circular image variant (PaymentGateway logos) */
+.fi-ta-image-column-image.rounded-full {
+    border-radius: 50% !important;
+    padding: 2px !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   6. TABLE — ROW, HEADER, GENERAL POLISH
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Tighten row padding slightly and add subtle hover */
+.fi-ta-row {
+    transition: background-color 0.1s ease;
+}
+.fi-ta-row:hover > td {
+    background-color: rgba(245, 158, 11, 0.03) !important;
+}
+.dark .fi-ta-row:hover > td {
+    background-color: rgba(245, 158, 11, 0.05) !important;
+}
+
+/* Table wrapper card — match section card radius */
+.fi-ta-ctn {
+    border-radius: 14px !important;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 2px 8px -2px rgba(15,23,42,0.05) !important;
+}
+.dark .fi-ta-ctn {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25), 0 2px 8px -2px rgba(0,0,0,0.2) !important;
+}
+
+/* Table header text */
+.fi-ta-header-cell {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.03em !important;
+    text-transform: uppercase !important;
+    color: rgb(100, 116, 139) !important;
+}
+.dark .fi-ta-header-cell {
+    color: rgb(100, 116, 139) !important;
+}
+
+/* Amber accent on sorted column header */
+.fi-ta-header-cell[aria-sort] {
+    color: rgb(180, 113, 2) !important;
+}
+.dark .fi-ta-header-cell[aria-sort] {
+    color: rgb(245, 158, 11) !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   7. TABLE ACTIONS — icon button styling
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Action cell — always fully visible */
+.fi-ta-actions {
+    opacity: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+}
+
+/* Icon-only buttons in table rows */
+.fi-ta-actions .fi-icon-btn {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease !important;
+    border: 1px solid transparent !important;
+}
+
+/* Primary (edit) icon button */
+.fi-ta-actions .fi-icon-btn.fi-color-primary {
+    color: rgb(161, 98, 7) !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-color: rgba(245, 158, 11, 0.2) !important;
+}
+.fi-ta-actions .fi-icon-btn.fi-color-primary:hover {
+    background: rgba(245, 158, 11, 0.15) !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12) !important;
+}
+.dark .fi-ta-actions .fi-icon-btn.fi-color-primary {
+    color: rgb(245, 158, 11) !important;
+    background: rgba(245, 158, 11, 0.1) !important;
+    border-color: rgba(245, 158, 11, 0.25) !important;
+}
+.dark .fi-ta-actions .fi-icon-btn.fi-color-primary:hover {
+    background: rgba(245, 158, 11, 0.18) !important;
+    border-color: rgba(245, 158, 11, 0.45) !important;
+}
+
+/* Danger (delete) icon button */
+.fi-ta-actions .fi-icon-btn.fi-color-danger {
+    color: rgb(185, 28, 28) !important;
+    background: rgba(220, 38, 38, 0.06) !important;
+    border-color: rgba(220, 38, 38, 0.15) !important;
+}
+.fi-ta-actions .fi-icon-btn.fi-color-danger:hover {
+    background: rgba(220, 38, 38, 0.12) !important;
+    border-color: rgba(220, 38, 38, 0.35) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10) !important;
+}
+.dark .fi-ta-actions .fi-icon-btn.fi-color-danger {
+    color: rgb(252, 165, 165) !important;
+    background: rgba(220, 38, 38, 0.08) !important;
+    border-color: rgba(220, 38, 38, 0.2) !important;
+}
+.dark .fi-ta-actions .fi-icon-btn.fi-color-danger:hover {
+    background: rgba(220, 38, 38, 0.15) !important;
+    border-color: rgba(220, 38, 38, 0.4) !important;
+}
+
+/* Gray (more actions / dropdown trigger) icon button */
+.fi-ta-actions .fi-icon-btn.fi-color-gray {
+    color: rgb(100, 116, 139) !important;
+    background: transparent !important;
+    border-color: rgba(15, 23, 42, 0.1) !important;
+}
+.fi-ta-actions .fi-icon-btn.fi-color-gray:hover {
+    background: rgba(15, 23, 42, 0.06) !important;
+    border-color: rgba(15, 23, 42, 0.2) !important;
+    color: rgb(51, 65, 85) !important;
+}
+.dark .fi-ta-actions .fi-icon-btn.fi-color-gray {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: rgb(148, 163, 184) !important;
+}
+.dark .fi-ta-actions .fi-icon-btn.fi-color-gray:hover {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    color: rgb(226, 232, 240) !important;
+}
+
+/* Action dropdown panel — ensure it floats above table rows */
+.fi-dropdown-panel {
+    z-index: 50 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 10px 25px -5px rgba(0,0,0,0.15) !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    overflow: hidden !important;
+}
+.dark .fi-dropdown-panel {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3), 0 10px 25px -5px rgba(0,0,0,0.4) !important;
+}
+
+/* Dropdown items */
+.fi-dropdown-list-item-button {
+    transition: background-color 0.1s ease !important;
+}
+.fi-dropdown-list-item-button:hover {
+    background-color: rgba(245, 158, 11, 0.06) !important;
+}
+.dark .fi-dropdown-list-item-button:hover {
+    background-color: rgba(245, 158, 11, 0.08) !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   8. OVERFLOW FIX — sections & repeaters (form dropdowns must escape)
+   ════════════════════════════════════════════════════════════════════ */
+.fi-section,
+.fi-section-content,
+.fi-section-content-ctn,
+.fi-fo-repeater,
+.fi-fo-repeater-item,
+.fi-fo-repeater-item > .fi-fo-repeater-item-content,
+.fi-fo-repeater-item .fi-fo-field-wrp {
+    overflow: visible !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   9. CURATOR — MEDIA LIBRARY FULL UI/UX
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── A. /admin/media page — GRID MODE CARDS ── */
+
+.fi-resource-media .fi-ta-record:has(.curator-grid-column) {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(15,23,42,0.10) !important;
+    box-shadow: 0 1px 4px rgba(15,23,42,0.08), 0 2px 10px -2px rgba(15,23,42,0.05) !important;
+    background: #111827 !important;
+    transition: box-shadow 0.22s ease, border-color 0.22s ease, transform 0.18s ease !important;
+    position: relative !important;
+    aspect-ratio: 4/3 !important;
+}
+.dark .fi-resource-media .fi-ta-record:has(.curator-grid-column) {
+    background: rgb(15,23,42) !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+.fi-resource-media .fi-ta-record:has(.curator-grid-column):hover {
+    border-color: rgba(245,158,11,0.55) !important;
+    box-shadow: 0 6px 28px rgba(245,158,11,0.18), 0 0 0 1.5px rgba(245,158,11,0.22) !important;
+    transform: translateY(-3px) !important;
+}
+.fi-resource-media .fi-ta-record:has(.curator-grid-column) > div { height: 100% !important; }
+.fi-resource-media .fi-ta .fi-ta-record:has(.curator-grid-column) label {
+    height: 100% !important; width: 100% !important; aspect-ratio: unset !important;
+}
+.curator-grid-column, .curator-grid-column > div { border-radius: 11px !important; }
+
+.fi-resource-media .fi-ta-record:has(.curator-grid-column) .fi-ta-actions {
+    position: absolute !important; top: 0.45rem !important; right: 0.45rem !important;
+    left: auto !important; bottom: auto !important;
+    display: flex !important; flex-direction: row !important; align-items: center !important;
+    gap: 0.3rem !important; padding: 0 !important; margin-top: 0 !important;
+    background: transparent !important; border: none !important; min-height: 0 !important;
+    z-index: 20 !important; opacity: 0 !important;
+    transform: translateY(-5px) scale(0.88) !important;
+    transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.34,1.56,0.64,1) !important;
+    pointer-events: none !important;
+}
+.fi-resource-media .fi-ta-record:has(.curator-grid-column):hover .fi-ta-actions {
+    opacity: 1 !important; transform: translateY(0) scale(1) !important; pointer-events: auto !important;
+}
+.fi-resource-media .fi-ta-record:has(.curator-grid-column) .fi-ta-actions .fi-btn {
+    font-size: 0 !important; width: 2.15rem !important; height: 2.15rem !important;
+    min-width: 2.15rem !important; min-height: 2.15rem !important; padding: 0 !important;
+    border-radius: 10px !important; display: inline-flex !important;
+    align-items: center !important; justify-content: center !important;
+    border-width: 1px !important; border-style: solid !important;
+    backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important;
+    transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease !important;
+    flex-shrink: 0 !important;
+}
+.fi-resource-media .fi-ta-record:has(.curator-grid-column) .fi-ta-actions .fi-btn svg {
+    width: 1rem !important; height: 1rem !important; flex-shrink: 0 !important; font-size: 1rem !important;
+}
+.fi-resource-media .fi-ta-record:has(.curator-grid-column) .fi-ta-actions .fi-color-primary.fi-btn {
+    color: #fff !important; background: rgba(245,158,11,0.9) !important;
+    border-color: rgba(245,158,11,0.55) !important;
+    box-shadow: 0 2px 10px rgba(245,158,11,0.55), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+}
+.fi-resource-media .fi-ta-record:has(.curator-grid-column) .fi-ta-actions .fi-color-primary.fi-btn:hover {
+    background: rgb(245,158,11) !important;
+    box-shadow: 0 4px 18px rgba(245,158,11,0.72) !important; transform: scale(1.12) !important;
+}
+.fi-resource-media .fi-ta-record:has(.curator-grid-column) .fi-ta-actions .fi-color-danger.fi-btn {
+    color: #fff !important; background: rgba(220,38,38,0.88) !important;
+    border-color: rgba(220,38,38,0.5) !important;
+    box-shadow: 0 2px 10px rgba(220,38,38,0.5), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+}
+.fi-resource-media .fi-ta-record:has(.curator-grid-column) .fi-ta-actions .fi-color-danger.fi-btn:hover {
+    background: rgb(220,38,38) !important;
+    box-shadow: 0 4px 18px rgba(220,38,38,0.68) !important; transform: scale(1.12) !important;
+}
+
+
+/* ── B. PICKER FIELD — selected items shown below the open button ── */
+
+.curator-media-picker li > div.relative.block {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.curator-media-picker li > div.relative.block:hover {
+    border-color: rgba(245,158,11,0.4) !important;
+    box-shadow: 0 2px 10px rgba(245,158,11,0.12) !important;
+}
+.curator-media-picker .absolute.top-0.right-0 > div {
+    background: rgba(8,12,24,0.68) !important;
+    backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important;
+    border-radius: 0 8px 0 12px !important; border: none !important;
+    padding: 3px 4px !important; gap: 2px !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+.curator-media-picker .absolute.top-0.right-0 > div > div { border-left: none !important; }
+.curator-media-picker .absolute.top-0.right-0 .fi-ac-group-trigger,
+.curator-media-picker .absolute.top-0.right-0 [type="button"]:not([class*="fi-icon-btn"]) {
+    color: rgba(255,255,255,0.88) !important; border-radius: 7px !important;
+    transition: color 0.15s ease, background 0.15s ease !important;
+}
+.curator-media-picker .absolute.top-0.right-0 .fi-ac-group-trigger:hover,
+.curator-media-picker .absolute.top-0.right-0 [type="button"]:not([class*="fi-icon-btn"]):hover {
+    color: #fff !important; background: rgba(245,158,11,0.28) !important;
+}
+.curator-media-picker .absolute.top-0.right-0 .fi-icon-btn {
+    color: rgba(255,255,255,0.88) !important; border: none !important;
+    border-radius: 7px !important; background: transparent !important;
+    transition: color 0.15s ease, background 0.15s ease !important;
+}
+.curator-media-picker .absolute.top-0.right-0 .fi-icon-btn:hover {
+    color: #fff !important; background: rgba(245,158,11,0.28) !important;
+}
+.curator-picker-list-preview {
+    width: 40px !important; height: 40px !important;
+    min-width: 40px !important; flex-shrink: 0 !important;
+    border-radius: 6px !important; overflow: hidden !important;
+    border: 1px solid rgba(15,23,42,0.08) !important;
+}
+.curator-picker-list-preview img {
+    width: 100% !important; height: 100% !important; object-fit: contain !important;
+}
+.curator-picker-list-details p { font-size: 11px !important; line-height: 1.4 !important; }
+.curator-media-picker ul > li > div.checkered {
+    width: 300px !important; max-width: 300px !important; height: 300px !important;
+    margin-left: auto !important; margin-right: auto !important;
+}
+.curator-media-picker ul > li > div.checkered img {
+    width: 100% !important; height: 100% !important; object-fit: contain !important;
+}
+.curator-picker-trigger { transition: border-color 0.15s ease, box-shadow 0.15s ease !important; }
+.curator-picker-trigger:hover {
+    border-color: rgb(245,158,11) !important;
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important;
+}
+.curator-picker-selected-thumb {
+    border-radius: 8px !important; overflow: hidden !important;
+    border: 2px solid rgba(245,158,11,0.3) !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   C. PICKER MODAL — WordPress-style layout
+   Uses .cpm-* prefix (Curator Picker Modal) for all new selectors.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Make the modal window taller — targets the Filament window that wraps
+   the Livewire component; :has() is fine for an admin-only interface.    */
+.fi-modal-window:has(.curator-panel) {
+    height: 90vh !important;
+    max-height: 90vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+.fi-modal-window:has(.curator-panel) .fi-modal-content {
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    position: relative !important;
+}
+/* Tighten the modal heading */
+.fi-modal-window:has(.curator-panel) .fi-modal-header {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    border-bottom: 1px solid rgba(15,23,42,0.07) !important;
+    background: white !important;
+}
+.dark .fi-modal-window:has(.curator-panel) .fi-modal-header {
+    background: rgb(17,24,39) !important;
+    border-bottom-color: rgba(255,255,255,0.07) !important;
+}
+
+/* ── C1. TAB BAR ── */
+.cpm-tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid rgba(15,23,42,0.08);
+    min-height: 3rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+.dark .cpm-tab-bar {
+    background: rgb(17,24,39);
+    border-bottom-color: rgba(255,255,255,0.07);
+}
+.cpm-tab-list {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+.cpm-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgb(100,116,139);
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+    line-height: 1;
+}
+.cpm-tab svg { width: 15px; height: 15px; flex-shrink: 0; }
+.cpm-tab:hover { color: rgb(51,65,85); background: rgba(15,23,42,0.05); }
+.dark .cpm-tab:hover { color: rgb(226,232,240); background: rgba(255,255,255,0.06); }
+.cpm-tab--active {
+    color: rgb(161,98,7) !important;
+    background: rgba(245,158,11,0.1) !important;
+    border-color: rgba(245,158,11,0.2) !important;
+}
+.dark .cpm-tab--active {
+    color: rgb(245,158,11) !important;
+    background: rgba(245,158,11,0.12) !important;
+    border-color: rgba(245,158,11,0.25) !important;
+}
+.cpm-tab-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 5px;
+    font-size: 10px; font-weight: 700; border-radius: 9px; line-height: 1;
+    background: rgba(15,23,42,0.08); color: rgb(100,116,139);
+}
+.cpm-tab--active .cpm-tab-badge {
+    background: rgba(245,158,11,0.18); color: rgb(161,98,7);
+}
+.dark .cpm-tab-badge { background: rgba(255,255,255,0.08); }
+.dark .cpm-tab--active .cpm-tab-badge {
+    background: rgba(245,158,11,0.22); color: rgb(245,158,11);
+}
+
+/* ── C2. SEARCH + CONTROLS ── */
+.cpm-tab-controls {
+    display: flex; align-items: center; gap: 8px; margin-left: auto;
+}
+.cpm-search {
+    position: relative; display: flex; align-items: center;
+    border: 1px solid rgba(15,23,42,0.14); border-radius: 8px;
+    background: white; overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.dark .cpm-search {
+    border-color: rgba(255,255,255,0.1); background: rgba(30,41,59,0.7);
+}
+.cpm-search:focus-within {
+    border-color: rgb(245,158,11); box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
+}
+.cpm-search-icon {
+    position: absolute; left: 9px; width: 14px; height: 14px;
+    color: rgb(148,163,184); pointer-events: none; flex-shrink: 0;
+}
+.cpm-search-input {
+    padding: 0.375rem 2rem 0.375rem 2rem !important;
+    font-size: 0.8125rem !important; border: none !important;
+    background: transparent !important; outline: none !important;
+    box-shadow: none !important; color: rgb(15,23,42); width: 200px;
+}
+.dark .cpm-search-input { color: rgb(226,232,240); }
+.cpm-search-input::placeholder { color: rgb(148,163,184); }
+.cpm-search-spinner {
+    position: absolute; right: 9px; width: 14px; height: 14px; color: rgb(148,163,184);
+    display: none;
+}
+[wire\:loading].cpm-search-spinner { display: block; }
+
+/* ── C3. MULTISELECT HINT ── */
+.cpm-multiselect-hint {
+    font-size: 0.75rem; color: rgb(148,163,184);
+    margin-bottom: 0.75rem;
+}
+.cpm-multiselect-hint kbd {
+    display: inline-flex; align-items: center; padding: 1px 5px;
+    font-size: 0.7rem; font-weight: 600; border-radius: 4px;
+    background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.15);
+    color: rgb(71,85,105); font-family: ui-monospace, monospace;
+}
+.dark .cpm-multiselect-hint kbd {
+    background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: rgb(148,163,184);
+}
+
+/* ── C4. GALLERY COLUMN ── */
+.cpm-gallery {
+    flex: 1; height: 100%; overflow-y: auto; padding: 1rem;
+    background: #f8fafc;
+    min-width: 0;
+}
+.dark .cpm-gallery { background: rgba(15,23,42,0.25); }
+
+/* Grid layout — responsive columns */
+ul.curator-picker-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.5rem !important;
+    list-style: none !important; padding: 0 !important; margin: 0 !important;
+}
+@media (min-width: 480px) {
+    ul.curator-picker-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 768px) {
+    ul.curator-picker-grid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 1024px) {
+    ul.curator-picker-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 1280px) {
+    ul.curator-picker-grid { grid-template-columns: repeat(7, minmax(0, 1fr)) !important; }
+}
+
+/* ── C5. GRID ITEMS ── */
+.cpm-grid-item {
+    position: relative; aspect-ratio: 1/1;
+    border-radius: 8px; overflow: hidden;
+    background: #111827;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.14);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+}
+.cpm-grid-item:hover {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 2.5px rgb(245,158,11), 0 4px 16px rgba(245,158,11,0.25);
+}
+.cpm-grid-item--dim { opacity: 0.35; transition: opacity 0.15s ease; }
+
+.cpm-grid-btn {
+    display: block; width: 100%; height: 100%; border: none; background: none; padding: 0; cursor: pointer;
+}
+.cpm-grid-btn img {
+    display: block; width: 100%; height: 100%; object-fit: cover;
+}
+.cpm-grid-name {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    font-size: 0.575rem; color: white; line-height: 1.2;
+    background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%);
+    padding: 14px 5px 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    pointer-events: none; letter-spacing: 0.01em;
+}
+
+/* Selected state overlay */
+.cpm-grid-selected {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(245,158,11,0.22);
+    outline: 2.5px solid rgb(245,158,11); outline-offset: -2px;
+    border: none; cursor: pointer; border-radius: inherit;
+}
+.cpm-grid-check {
+    display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgb(245,158,11); color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35), 0 0 0 2px rgba(255,255,255,0.5);
+}
+
+/* ── C6. EMPTY STATE ── */
+.cpm-grid-empty {
+    grid-column: 1 / -1 !important;
+    aspect-ratio: unset !important; border-radius: 0 !important;
+    overflow: visible !important; box-shadow: none !important;
+    background: transparent !important; cursor: default !important;
+}
+.cpm-grid-empty:hover { transform: none !important; box-shadow: none !important; }
+.cpm-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; padding: 4rem 2rem; text-align: center;
+}
+.cpm-empty-icon { width: 72px; height: 72px; color: rgb(203,213,225); }
+.dark .cpm-empty-icon { color: rgb(51,65,85); }
+.cpm-empty-heading {
+    font-size: 1rem; font-weight: 600; color: rgb(51,65,85); margin: 0;
+}
+.dark .cpm-empty-heading { color: rgb(148,163,184); }
+.cpm-empty-sub { font-size: 0.875rem; color: rgb(148,163,184); margin: 0; }
+.cpm-empty-cta {
+    margin-top: 6px; padding: 0.5rem 1.25rem;
+    background: rgb(245,158,11); color: white;
+    font-size: 0.875rem; font-weight: 600; border-radius: 8px;
+    border: none; cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.35);
+}
+.cpm-empty-cta:hover {
+    background: rgb(217,119,6);
+    box-shadow: 0 4px 14px rgba(245,158,11,0.5);
+    transform: translateY(-1px);
+}
+
+/* ── C7. SIDEBAR ── */
+.cpm-sidebar {
+    width: 100%; max-width: 300px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    background: #f9fafb;
+    border-left: 1px solid rgba(15,23,42,0.08);
+    overflow: hidden; height: 100%;
+    transition: max-width 0.25s ease;
+}
+.dark .cpm-sidebar {
+    background: rgb(17,24,39); border-left-color: rgba(255,255,255,0.07);
+}
+/* Upload mode: sidebar becomes the full panel */
+.cpm-sidebar--upload {
+    max-width: 100% !important; border-left: none !important;
+}
+
+/* ── C8. SELECTED FILE PREVIEW ── */
+.cpm-preview {
+    flex-shrink: 0; border-bottom: 1px solid rgba(15,23,42,0.07);
+    background: rgb(241,245,249);
+    padding: 0.75rem;
+}
+.dark .cpm-preview {
+    background: rgba(15,23,42,0.5); border-bottom-color: rgba(255,255,255,0.06);
+}
+.cpm-preview-thumb {
+    width: 100%; aspect-ratio: 16/9;
+    background: #0f172a; border-radius: 8px; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+}
+.cpm-preview-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.cpm-preview-info { margin-top: 8px; }
+.cpm-preview-name {
+    font-size: 0.8125rem; font-weight: 600;
+    color: rgb(30,41,59); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dark .cpm-preview-name { color: rgb(226,232,240); }
+.cpm-preview-meta {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px;
+}
+.cpm-preview-meta span { font-size: 0.6875rem; color: rgb(100,116,139); }
+.cpm-preview-badge {
+    display: inline-flex; align-items: center; padding: 1px 6px;
+    background: rgba(245,158,11,0.12); color: rgb(161,98,7) !important;
+    border-radius: 4px; font-weight: 700; font-size: 0.6875rem !important;
+}
+.dark .cpm-preview-badge {
+    background: rgba(245,158,11,0.15); color: rgb(245,158,11) !important;
+}
+
+/* ── C9. NO-SELECTION PLACEHOLDER ── */
+.cpm-placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 1.25rem 1rem; text-align: center;
+    color: rgb(148,163,184); font-size: 0.8125rem;
+    border-bottom: 1px solid rgba(15,23,42,0.07); flex-shrink: 0;
+}
+.dark .cpm-placeholder { border-bottom-color: rgba(255,255,255,0.05); }
+.cpm-placeholder-icon { width: 28px; height: 28px; opacity: 0.35; }
+
+/* ── C10. SIDEBAR HEADING ── */
+.cpm-sidebar-heading {
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; color: rgb(100,116,139);
+    padding: 0.625rem 1rem 0; flex-shrink: 0;
+}
+.dark .cpm-sidebar-heading { color: rgb(71,85,105); }
+
+/* ── C11. SIDEBAR FORM AREA ── */
+.cpm-sidebar-form {
+    flex: 1; overflow-y: auto; padding: 0.625rem 1rem 1rem; min-height: 0;
+}
+/* Upload mode: center the upload widget */
+.cpm-sidebar--upload .cpm-sidebar-form {
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem 2.5rem;
+}
+.cpm-sidebar--upload .cpm-sidebar-form > div:first-child {
+    width: 100%; max-width: 600px;
+}
+/* Also hide the placeholder and preview in upload mode */
+.cpm-sidebar--upload .cpm-placeholder,
+.cpm-sidebar--upload .cpm-preview { display: none !important; }
+
+/* ── C12. SIDEBAR FOOTER ── */
+.cpm-sidebar-footer {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    padding: 0.625rem 1rem;
+    border-top: 1px solid rgba(15,23,42,0.08);
+    background: rgba(248,250,252,0.9); flex-shrink: 0;
+}
+.dark .cpm-sidebar-footer {
+    border-top-color: rgba(255,255,255,0.07); background: rgba(17,24,39,0.7);
+}
+/* Insert / Select button — amber CTA */
+.cpm-insert-wrap { margin-left: auto; }
+.cpm-insert-wrap .fi-btn {
+    background: rgb(245,158,11) !important; border-color: rgb(217,119,6) !important;
+    color: white !important; font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.4) !important;
+    transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease !important;
+}
+.cpm-insert-wrap .fi-btn:hover {
+    background: rgb(217,119,6) !important;
+    box-shadow: 0 4px 18px rgba(245,158,11,0.55) !important;
+    transform: translateY(-1px) !important;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   10. NOTIFICATION TOASTS — amber success accent
+   ════════════════════════════════════════════════════════════════════ */
+.fi-no-notification {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08), 0 10px 25px -5px rgba(0,0,0,0.12) !important;
 }

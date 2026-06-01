@@ -3958,6 +3958,25 @@ body.tg-modal-open {
   margin-bottom: 0;
 }
 
+/* RichEditor (Trix) output — plain <ul>/<ol> need explicit list styles
+   because the global * reset strips padding-left, hiding outside markers */
+.shop__description-wrap ul,
+.shop__description-wrap ol {
+  padding-left: 1.5rem;
+}
+.shop__description-wrap ul li {
+  list-style: disc;
+  font-size: 17px;
+  line-height: 1.65;
+  margin-bottom: 6px;
+}
+.shop__description-wrap ol li {
+  list-style: decimal;
+  font-size: 17px;
+  line-height: 1.65;
+  margin-bottom: 6px;
+}
+
 .faq-list-item {
   background: #14221a;
   margin-bottom: 18px;

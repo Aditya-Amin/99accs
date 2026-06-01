@@ -57,12 +57,21 @@ class SupportController extends Controller
 
     public function contact(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'name'    => 'required|string|max:255',
             'email'   => 'required|email',
             'subject' => 'required|string|max:255',
             'message' => 'required|string|max:5000',
         ]);
+
+        // No support-ticket model exists yet, so this is the closest thing to a
+        // "ticket created" event — alert the admins so the message isn't missed.
+        \App\Support\AdminNotifier::notify(
+            title: 'New Support Message',
+            body: "{$data['subject']} — from {$data['name']} ({$data['email']})",
+            icon: 'heroicon-o-lifebuoy',
+            iconColor: 'info',
+        );
 
         return response()->json([
             'message' => 'Your message has been received. We will get back to you shortly.',

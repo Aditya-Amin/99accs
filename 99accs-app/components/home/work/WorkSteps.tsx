@@ -33,7 +33,7 @@ export function WorkStepList({ steps }: { steps: WorkStep[] }) {
   return (
     <div className="work__item-wrap">
       {steps.map((step, i) => (
-        <WorkStepItem key={step.id} step={step} active={i === 0} />
+        <WorkStepItem key={i} step={step} active={i === 0} />
       ))}
     </div>
   );

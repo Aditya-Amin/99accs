@@ -288,17 +288,23 @@ export interface ProductProfileInfo {
   features?: ProfileFeature[];
 }
 
+export interface ProductHighlight {
+  icon?: string | null;
+  label: string;
+}
+
 export interface Product {
   id: number;
   slug: string;
   game: Game;
   account_type: AccountType;
-  section: ProductSection;
+  section: ProductSection | null;
   title: string;
   price: number;
-  price_max?: number | null;
-  old_price?: number | null;
+  regular_price?: number | null;
+  discount_percent?: number | null;
   country: ProductCountry;
+  has_skin_types?: boolean;
   categories: ProductCategory[];
   images: string[];
   // When true, the catalog card renders the `shop__thumb-gallery` popup (the
@@ -306,7 +312,6 @@ export interface Product {
   // `account_type` — some inactive_exclusive cards don't have it, some
   // standard cards (Legends EUW) do. Falsy → no popup.
   has_gallery?: boolean;
-  discount_percent?: number | null;
   badge_icon?: string | null;
   regions?: Region[];    // M:N — denormalized from product_region pivot
   rank?: string | null;
@@ -314,8 +319,7 @@ export interface Product {
   skins?: string[];
   buddies?: string[];
   description: string;
-  short_description?: string | null;
-  specs: Record<string, string>;
+  highlights?: ProductHighlight[];
   stock: number;
   created_at: string;
   related?: Product[];
@@ -331,9 +335,17 @@ export interface Product {
   locker?: ProductLocker;
   seasons?: ProductSeasons;
   description_sections?: ProductDescriptionSection[];
+  faq_items?: DescriptionFaqItem[];
   min_quantity?: number;
   last_match_label?: string;
   guarantee?: ProductGuarantee;
+
+  // SEO — populated by Laravel ProductDetailResource (null on list endpoints)
+  meta_title?: string | null;
+  meta_description?: string | null;
+  meta_keywords?: string | null;
+  is_cornerstone?: boolean;
+  canonical_url?: string | null;
 }
 
 export interface PaginationMeta {
@@ -368,21 +380,21 @@ export interface ApiError {
 export interface AuthUser {
   id: number;
   name: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
+  phone?: string | null;
+  must_reset_password?: boolean;
+  is_legacy?: boolean;
   created_at: string;
-}
-
-export interface AuthLoginResponse {
-  data: {
-    token: string;
-    user: AuthUser;
-  };
 }
 
 export interface Order {
   id: number;
+  number?: string;           // human-readable e.g. "ORD-20240115-XXXX"
   total: number;
   status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  payment_method?: string | null;
   created_at: string;
   items: OrderItem[];
 }
@@ -469,11 +481,7 @@ export interface BannerSubtitle {
   text: string;
 }
 
-export interface BannerHeading {
-  prefix: string;
-  highlight: string;
-  suffix: string;
-}
+export type BannerHeading = string;
 
 export interface BannerFeature {
   id: number;
@@ -529,15 +537,9 @@ export interface FeatureItem {
   text: string;
 }
 
-export interface FeaturesHeading {
-  prefix: string;
-  user_count: number;
-  suffix: string;
-}
-
 export interface HomeFeatures {
   background_image: string;
-  heading: FeaturesHeading;
+  heading: string;
   items: FeatureItem[];
 }
 
@@ -577,6 +579,73 @@ export interface HomeData {
   features: HomeFeatures;
   testimonials: HomeTestimonials;
   cta: HomeCta;
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+
+export type FooterWidgetType    = 'menu' | 'help_cta';
+export type FooterSocialPlatform = 'discord' | 'telegram' | 'facebook' | 'instagram';
+export type FooterQuickLinkIcon =
+  | 'submit_ticket'
+  | 'account_email'
+  | 'support_articles'
+  | 'faq'
+  | 'terms'
+  | 'privacy'
+  | 'cookie'
+  | 'cart'
+  | 'blog';
+
+export interface FooterMenuLink {
+  label: string;
+  href: string;
+}
+
+export interface FooterMenuWidgetConfig {
+  title: string;
+  icon_url?: string | null;
+  links: FooterMenuLink[];
+}
+
+export interface FooterHelpCtaConfig {
+  title: string;
+  description: string;
+  button_label: string;
+  button_href: string;
+}
+
+export interface FooterWidget {
+  id: number;
+  type: FooterWidgetType;
+  col_class: string;
+  config: FooterMenuWidgetConfig | FooterHelpCtaConfig;
+}
+
+export interface FooterSocialLink {
+  platform: FooterSocialPlatform;
+  url: string;
+}
+
+export interface FooterQuickLink {
+  icon: FooterQuickLinkIcon;
+  label: string;
+  href: string;
+}
+
+export interface FooterSettings {
+  logo: string | null;
+  logo_href: string;
+  social_links: FooterSocialLink[];
+  quick_links: FooterQuickLink[];
+  payment_image: string | null;
+  copyright: string;
+  copyright_site_name: string;
+  copyright_href: string;
+}
+
+export interface FooterData {
+  settings: FooterSettings;
+  widgets: FooterWidget[];
 }
 
 export interface CartItem {

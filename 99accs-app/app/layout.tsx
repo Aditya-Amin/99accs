@@ -26,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="/magnific-popup.css" />
         <link rel="stylesheet" href="/swiper-bundle.min.css" />
         <link rel="stylesheet" href="/main.css" />
+        <link rel="stylesheet" href="/additional.css" />
         <link rel="shortcut icon" href="/img/favicon.png" />
       </head>
       <body>

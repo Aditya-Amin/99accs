@@ -28,7 +28,13 @@ export default function HeaderUserMenu() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
 
-  const label = user?.name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'Account';
+  // Prefer first name, then the email local-part, then a generic label.
+  // Use `||` (not `??`) so an empty/whitespace name from a legacy import
+  // (full_name = "") falls through to the email instead of rendering blank.
+  const label =
+    user?.name?.trim().split(' ')[0] ||
+    user?.email?.split('@')[0] ||
+    'Account';
 
   const handleLogout = async () => {
     await logout();

@@ -33,7 +33,7 @@ export default function CheckoutClient({ initial, sessionId }: Props) {
       startTransition(() => void 0);
       (async () => {
         try {
-          const res = await fetch(`/api/mock/checkout/${sessionId}/update`, {
+          const res = await fetch(`/api/checkout/${sessionId}/update`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -58,7 +58,8 @@ export default function CheckoutClient({ initial, sessionId }: Props) {
 
   const onPaySuccess = () => {
     clearCart();
-    router.push(`/order/${sessionId}/confirmation`);
+    // Public, UUID-gated confirmation page — works for guests and authed users.
+    router.push(`/order/${sessionId}/received`);
   };
 
   return (
@@ -103,6 +104,7 @@ export default function CheckoutClient({ initial, sessionId }: Props) {
             {error && <p className="checkout__error">{error}</p>}
             <PayNowButton
               sessionId={sessionId}
+              paymentMethod={session.payment_method ?? undefined}
               disabled={!session.payment_method}
               onSuccess={onPaySuccess}
               onError={setError}

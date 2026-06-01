@@ -71,13 +71,27 @@ class TestimonialResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('author')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('title')->limit(40)->searchable(),
-                Tables\Columns\TextColumn::make('rating')->sortable(),
+                Tables\Columns\TextColumn::make('rating')
+                    ->sortable()
+                    ->formatStateUsing(fn (int $state): string => str_repeat('★', $state) . str_repeat('☆', 5 - $state))
+                    ->color(fn (int $state): string => $state >= 4 ? 'success' : ($state >= 3 ? 'warning' : 'danger')),
                 Tables\Columns\TextColumn::make('sort_order')->label('Order')->sortable(),
                 Tables\Columns\IconColumn::make('is_published')->boolean()->label('Published'),
             ])
             ->reorderable('sort_order')
             ->defaultSort('sort_order')
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([
+                Tables\Actions\EditAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->tooltip('Edit'),
+                Tables\Actions\DeleteAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->tooltip('Delete'),
+            ])
             ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);
     }
 

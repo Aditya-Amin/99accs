@@ -31,16 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'stripe' => [
-        'key'            => env('STRIPE_KEY'),
-        'secret'         => env('STRIPE_SECRET'),
-        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-    ],
-
-    'cryptomus' => [
-        'merchant_id'  => env('CRYPTOMUS_MERCHANT_ID'),
-        'payment_key'  => env('CRYPTOMUS_PAYMENT_KEY'),
-        'callback_url' => env('CRYPTOMUS_CALLBACK_URL', env('APP_URL') . '/webhooks/cryptomus'),
-    ],
+    // Payment gateway credentials (Stripe, Cryptomus, etc.) are stored
+    // encrypted in the payment_gateways table and managed via Filament →
+    // Settings → Payment Gateways. They are deliberately NOT read from env.
 
 ];

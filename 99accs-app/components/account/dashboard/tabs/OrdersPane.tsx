@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import type { Order } from '@/lib/api/types';
 
-// --- Shared search icon ---
 function SearchIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -11,7 +11,6 @@ function SearchIcon() {
   );
 }
 
-// --- Sort icon ---
 function SortIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -20,7 +19,6 @@ function SortIcon() {
   );
 }
 
-// --- New ticket button icon ---
 function PlusCircleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -29,25 +27,49 @@ function PlusCircleIcon() {
   );
 }
 
-// --- Table rows data ---
-const ALL_ORDERS = [
-  { id: '#15941', product: '1-30 Skins | NA', img: '/img/fortnite/fortnite_img01.png', payment: 'Mastercard', amount: '$2.00', status: 'In Progress', statusClass: 'country__code ap' },
-  { id: '#15941', product: 'Sparkle Specialist Guaranteed Skins', img: '/img/valorant/skin_img_01.png', payment: 'Visa', amount: '$12.00', status: 'Completed', statusClass: 'open' },
-  { id: '#15941', product: '50-100 Skins', img: '/img/fortnite/fortnite_img03.png', payment: 'American Express', amount: '$20.00', status: 'Completed', statusClass: 'open' },
-  { id: '#15941', product: 'Blue Squire Guaranteed skin + Mail Access', img: '/img/fortnite/fortnite_img04.png', payment: 'PayPal', amount: '$30.00', status: 'Cancelled', statusClass: 'closed' },
-  { id: '#15941', product: '180-250 Skins Mail Access', img: '/img/fortnite/fortnite_img06.png', payment: 'Discover', amount: '$2.00', status: 'In Progress', statusClass: 'country__code ap' },
-  { id: '#15941', product: 'Xander Guaranteed skin + Mail Access', img: '/img/valorant/skin_img_06.png', payment: 'Apple Pay', amount: '$2.00', status: 'Cancelled', statusClass: 'closed' },
-];
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-const SUB_TAB_FILTERS: Record<string, string[]> = {
-  tableTab1: ['In Progress', 'Completed', 'Cancelled'],
-  tableTab2: ['Completed'],
-  tableTab3: ['In Progress'],
-  tableTab4: ['Cancelled'],
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function fmtPrice(n: number) {
+  return `$${n.toFixed(2)}`;
+}
+
+type StatusInfo = { label: string; cssClass: string };
+
+function statusInfo(s: Order['status']): StatusInfo {
+  switch (s) {
+    case 'completed':  return { label: 'Completed',   cssClass: 'open' };
+    case 'cancelled':  return { label: 'Cancelled',   cssClass: 'closed' };
+    case 'processing': return { label: 'In Progress', cssClass: 'country__code ap' };
+    default:           return { label: 'Pending',     cssClass: 'country__code ap' };
+  }
+}
+
+const TAB_STATUSES: Record<string, Order['status'][]> = {
+  tableTab1: ['pending', 'processing', 'completed', 'cancelled'],
+  tableTab2: ['completed'],
+  tableTab3: ['pending', 'processing'],
+  tableTab4: ['cancelled'],
 };
 
-// --- Orders table ---
-function OrdersTable({ rows }: { rows: typeof ALL_ORDERS }) {
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function OrdersTable({ rows, search }: { rows: Order[]; search: string }) {
+  const q = search.toLowerCase();
+  const visible = q
+    ? rows.filter((o) =>
+        (o.number ?? String(o.id)).toLowerCase().includes(q) ||
+        o.items.some((i) => i.product_title.toLowerCase().includes(q))
+      )
+    : rows;
+
+  if (visible.length === 0) {
+    return <p style={{ color: 'rgba(255,255,255,0.4)', padding: '24px', textAlign: 'center' }}>No orders found.</p>;
+  }
+
   return (
     <table className="support__table-inner">
       <thead>
@@ -61,48 +83,58 @@ function OrdersTable({ rows }: { rows: typeof ALL_ORDERS }) {
         </tr>
       </thead>
       <tbody>
-        {rows.map((row, i) => (
-          <tr key={i}>
-            <td className="product__id">{row.id}</td>
-            <td className="product__info">
-              <div className="thumb"><img src={row.img} alt="" /></div>
-              <p>{row.product}</p>
-            </td>
-            <td className="product__payment"><span>{row.payment}</span></td>
-            <td className="product__price"><span>{row.amount}</span></td>
-            <td className="product__status">
-              <span className={row.statusClass}>{row.status}</span>
-            </td>
-            <td className="product__date"><span>Nov 14, 2023</span></td>
-          </tr>
-        ))}
+        {visible.map((order) => {
+          const firstItem = order.items?.[0];
+          const { label, cssClass } = statusInfo(order.status);
+          return (
+            <tr key={order.id}>
+              <td className="product__id">{order.number ?? `#${order.id}`}</td>
+              <td className="product__info">
+                {firstItem?.product_image && (
+                  <div className="thumb"><img src={firstItem.product_image} alt="" /></div>
+                )}
+                <p>{firstItem?.product_title ?? `Order #${order.id}`}</p>
+              </td>
+              <td className="product__payment"><span>{order.payment_method ?? '—'}</span></td>
+              <td className="product__price"><span>{fmtPrice(order.total)}</span></td>
+              <td className="product__status"><span className={cssClass}>{label}</span></td>
+              <td className="product__date"><span>{fmtDate(order.created_at)}</span></td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
 }
 
-export function OrdersPane() {
-  const [subTab, setSubTab] = useState('tableTab1');
+// ── Main component ────────────────────────────────────────────────────────────
 
-  const filteredRows = subTab === 'tableTab1'
-    ? ALL_ORDERS
-    : ALL_ORDERS.filter((r) => SUB_TAB_FILTERS[subTab]?.includes(r.status));
+interface Props {
+  initialOrders: Order[];
+  totalCount: number;
+}
+
+export function OrdersPane({ initialOrders, totalCount: _totalCount }: Props) {
+  const [subTab, setSubTab] = useState('tableTab1');
+  const [search, setSearch]   = useState('');
+
+  const filtered = subTab === 'tableTab1'
+    ? initialOrders
+    : initialOrders.filter((o) => TAB_STATUSES[subTab]?.includes(o.status));
 
   return (
     <div className="support__table-wrap-two account-pane active">
       <div className="support__table-top">
-        <form action="#" className="support__table-form">
+        <form action="#" className="support__table-form" onSubmit={(e) => e.preventDefault()}>
           <div className="form-grp">
             <label htmlFor="orders-search"><SearchIcon /></label>
-            <input type="text" id="orders-search" placeholder="Search..." />
-          </div>
-          <div className="select-grp">
-            <select id="orders-date" name="orders-date" className="country-name">
-              <option value="Last 7 Days">Last 7 Days</option>
-              <option value="Last 5 Days">Last 5 Days</option>
-              <option value="Last 3 Days">Last 3 Days</option>
-              <option value="Today">Today</option>
-            </select>
+            <input
+              type="text"
+              id="orders-search"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
           <button type="button"><SortIcon /></button>
         </form>
@@ -129,8 +161,8 @@ export function OrdersPane() {
         ))}
       </div>
       <div className="support__table-tab">
-        <div className="table-pane active">
-          <OrdersTable rows={filteredRows} />
+        <div className="table-pane active" style={{ display: 'block' }}>
+          <OrdersTable rows={filtered} search={search} />
         </div>
       </div>
     </div>

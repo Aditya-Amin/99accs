@@ -6,8 +6,8 @@ export function BannerFeatureList({ features }: { features: BannerFeature[] }) {
   return (
     <div className="banner__features wow fadeInUp" data-wow-delay=".6s">
       <ul className="list-wrap">
-        {features.map((f) => (
-          <li key={f.id}>
+        {features.map((f, i) => (
+          <li key={f.text ?? i}>
             <BannerIconByName name={f.icon} />
             {f.text}
           </li>

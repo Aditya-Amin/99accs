@@ -1,0 +1,87 @@
+{
+  "settings": {
+    "logo": "/img/logo/logo.svg",
+    "logo_href": "/",
+    "social_links": [
+      { "platform": "discord",   "url": "https://discord.com/" },
+      { "platform": "telegram",  "url": "https://web.telegram.org/" },
+      { "platform": "facebook",  "url": "https://www.facebook.com/" },
+      { "platform": "instagram", "url": "https://www.instagram.com/" }
+    ],
+    "quick_links": [
+      { "icon": "submit_ticket",    "label": "Submit Ticket",    "href": "/support/contact" },
+      { "icon": "account_email",    "label": "Account Email",    "href": "/account" },
+      { "icon": "support_articles", "label": "Support Articles", "href": "/support/articles" },
+      { "icon": "faq",              "label": "FAQ",              "href": "#" },
+      { "icon": "terms",            "label": "Terms of Service", "href": "#" },
+      { "icon": "privacy",          "label": "Privacy Policy",   "href": "#" },
+      { "icon": "cookie",           "label": "Cookie Policy",    "href": "#" },
+      { "icon": "cart",             "label": "Cart",             "href": "/cart" },
+      { "icon": "blog",             "label": "Blog",             "href": "#" }
+    ],
+    "payment_image": "/img/images/cart.png",
+    "copyright": "Copyright © 2021-{year} All Rights Reserved By",
+    "copyright_site_name": "99accs.com",
+    "copyright_href": "/"
+  },
+  "widgets": [
+    {
+      "id": 1,
+      "type": "menu",
+      "col_class": "col-lg-2 col-6",
+      "config": {
+        "title": "Valorant",
+        "icon_url": "/img/icons/header_cat01.svg",
+        "links": [
+          { "label": "Valorant - NA",     "href": "/product-category/valorant?region=na" },
+          { "label": "Valorant - EUROPE", "href": "/product-category/valorant?region=eu" },
+          { "label": "Valorant - AP",     "href": "/product-category/valorant?region=apac" },
+          { "label": "Valorant - LATAM",  "href": "/product-category/valorant?region=latam" },
+          { "label": "Valorant - BRAZIL", "href": "/product-category/valorant?region=br" }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "type": "menu",
+      "col_class": "col-lg-3 col-6",
+      "config": {
+        "title": "Fortnite",
+        "icon_url": "/img/icons/header_cat02.svg",
+        "links": [
+          { "label": "NFA Random Skins",               "href": "/product-category/fortnite" },
+          { "label": "NFA Guaranteed Skins",           "href": "/product-category/fortnite" },
+          { "label": "NFA Inactive Accounts",          "href": "/product-category/fortnite" },
+          { "label": "Skins + MAIL ACCESS",            "href": "/product-category/fortnite" },
+          { "label": "Exclusive Skins + Mail Access",  "href": "/product-category/fortnite" }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "type": "menu",
+      "col_class": "col-lg-3 col-sm-6",
+      "config": {
+        "title": "League Of Legends",
+        "icon_url": "/img/icons/header_cat03.svg",
+        "links": [
+          { "label": "North America (NA)",           "href": "/product-category/legends?region=na" },
+          { "label": "Europe West (EUW)",            "href": "/product-category/legends?region=eu" },
+          { "label": "Southeast Asia (SEA)",         "href": "/product-category/legends?region=apac" },
+          { "label": "Latin America North (LAN)",    "href": "/product-category/legends?region=latam" }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "type": "help_cta",
+      "col_class": "col-lg-4 col-sm-6",
+      "config": {
+        "title": "Need Help?",
+        "description": "We’re here to help. Our expert human-support team is at your service 24/7.",
+        "button_label": "Create ticket",
+        "button_href": "/support/contact"
+      }
+    }
+  ]
+}

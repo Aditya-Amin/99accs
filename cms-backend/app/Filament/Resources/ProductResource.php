@@ -8,10 +8,8 @@ use App\Models\Product;
 use App\Models\Section;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Table;
 
 class ProductResource extends Resource
@@ -54,14 +52,49 @@ class ProductResource extends Resource
                                     ->maxLength(255)
                                     ->unique(Product::class, 'slug', ignoreRecord: true),
 
-                                Forms\Components\RichEditor::make('short_description')
-                                    ->label('Short Description')
-                                    ->helperText('Bullet list shown in the purchase sidebar (3 feature highlights).')
+                                Forms\Components\Repeater::make('highlights')
+                                    ->label('Product Highlights')
+                                    ->helperText('Icon + text bullets shown in the purchase sidebar.')
+                                    ->schema([
+                                        \Awcodes\Curator\Components\Forms\CuratorPicker::make('icon')
+                                            ->label('Icon')
+                                            ->helperText('Pick an icon from the media library.')
+                                            ->listDisplay()
+                                            ->columnSpan(1),
+
+                                        Forms\Components\TextInput::make('label')
+                                            ->label('Highlight Text')
+                                            ->required()
+                                            ->placeholder('e.g. Instant Delivery After Payment')
+                                            ->maxLength(255)
+                                            ->columnSpan(2),
+                                    ])
+                                    ->columns(3)
+                                    ->addActionLabel('+ Add Highlight')
+                                    ->defaultItems(0)
+                                    ->reorderableWithButtons()
+                                    ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => $state['label'] ?? null)
                                     ->columnSpanFull(),
 
                                 Forms\Components\RichEditor::make('description')
                                     ->label('Full Description')
                                     ->helperText('Long product description rendered below the product details section.')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Section::make('Guarantee')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('guarantee_title')
+                                            ->label('Title')
+                                            ->placeholder('e.g. 99Accs Guarantee')
+                                            ->maxLength(255)
+                                            ->columnSpanFull(),
+
+                                        Forms\Components\Textarea::make('guarantee_body')
+                                            ->label('Body')
+                                            ->rows(4)
+                                            ->columnSpanFull(),
+                                    ])
                                     ->columnSpanFull(),
                             ])
                             ->columns(2),
@@ -127,11 +160,11 @@ class ProductResource extends Resource
 
                                                 \Filament\Notifications\Notification::make()
                                                     ->title('Import successful')
-                                                    ->body(implode(' · ', array_map(
-                                                        fn ($k, $v) => "{$v} {$k}",
-                                                        array_keys($dto->specs),
-                                                        array_values($dto->specs)
-                                                    )))
+                                                    ->body(implode(' · ', array_filter([
+                                                        $dto->agents_count ? "{$dto->agents_count} Agents" : null,
+                                                        count($dto->skins) ? count($dto->skins) . ' Skins' : null,
+                                                        count($dto->buddies) ? count($dto->buddies) . ' Buddies' : null,
+                                                    ])))
                                                     ->success()
                                                     ->send();
                                             } catch (\Throwable $e) {
@@ -208,13 +241,6 @@ class ProductResource extends Resource
                                     ->placeholder('Add buddy name...')
                                     ->columnSpanFull(),
 
-                                Forms\Components\KeyValue::make('specs')
-                                    ->label('Specs (product detail tabs)')
-                                    ->keyLabel('Label')
-                                    ->valueLabel('Value')
-                                    ->addActionLabel('Add spec')
-                                    ->columnSpanFull(),
-
                                 Forms\Components\Repeater::make('feature_badges')
                                     ->label('Feature Badges (card chips)')
                                     ->schema([
@@ -240,40 +266,24 @@ class ProductResource extends Resource
                         Forms\Components\Tabs\Tab::make('Pricing')
                             ->icon('heroicon-m-currency-dollar')
                             ->schema([
+                                Forms\Components\TextInput::make('regular_price')
+                                    ->label('Regular Price')
+                                    ->numeric()
+                                    ->prefix('$')
+                                    ->helperText('Original price — shown as strikethrough when a Sale Price is set.'),
+
                                 Forms\Components\TextInput::make('price')
                                     ->label('Sale Price')
                                     ->numeric()
                                     ->prefix('$')
-                                    ->required()
-                                    ->live(onBlur: true)
-                                    ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) =>
-                                        static::computeDiscount($get, $set)
-                                    ),
+                                    ->required(),
 
-                                Forms\Components\TextInput::make('price_max')
-                                    ->label('Max Price (range)')
-                                    ->numeric()
-                                    ->prefix('$')
-                                    ->helperText('Optional — when set card shows "$min – $max". Used by Fortnite random tiers.'),
-
-                                Forms\Components\TextInput::make('compare_at_price')
-                                    ->label('Original Price (strikethrough)')
-                                    ->numeric()
-                                    ->prefix('$')
-                                    ->live(onBlur: true)
-                                    ->afterStateUpdated(fn (Forms\Get $get, Forms\Set $set) =>
-                                        static::computeDiscount($get, $set)
-                                    ),
-
-                                Forms\Components\TextInput::make('discount_percent')
-                                    ->label('Discount %')
-                                    ->numeric()
-                                    ->suffix('%')
-                                    ->minValue(0)
-                                    ->maxValue(100)
-                                    ->helperText('Auto-computed from prices. Override if needed.'),
-
-                                \App\Filament\Forms\IconUpload::make('badge_icon', 'Badge Icon', 'badge-icons'),
+                                \Awcodes\Curator\Components\Forms\CuratorPicker::make('badge_icon')
+                                    ->label('Badge Icon')
+                                    ->helperText('Small icon shown next to the region code on product cards and detail page.')
+                                    ->listDisplay(true)
+                                    ->constrained(true)
+                                    ->columnSpanFull(),
                             ])
                             ->columns(2),
 
@@ -389,19 +399,27 @@ class ProductResource extends Resource
                                     ->dehydrateStateUsing(fn ($state) => is_string($state) ? json_decode($state, true) : $state)
                                     ->columnSpanFull(),
 
-                                Forms\Components\Textarea::make('description_sections')
-                                    ->label('Description Sections (JSON)')
-                                    ->rows(6)
-                                    ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
-                                    ->dehydrateStateUsing(fn ($state) => is_string($state) ? json_decode($state, true) : $state)
+                                Forms\Components\Repeater::make('faq_items')
+                                    ->label('FAQ')
+                                    ->helperText('Frequently asked questions shown at the bottom of the product detail page.')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('question')
+                                            ->label('Question')
+                                            ->required()
+                                            ->columnSpanFull(),
+
+                                        Forms\Components\Textarea::make('answer')
+                                            ->label('Answer')
+                                            ->required()
+                                            ->rows(3)
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add FAQ item')
+                                    ->collapsible()
+                                    ->cloneable()
                                     ->columnSpanFull(),
 
-                                Forms\Components\Textarea::make('guarantee')
-                                    ->label('Guarantee Box (JSON)')
-                                    ->rows(3)
-                                    ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
-                                    ->dehydrateStateUsing(fn ($state) => is_string($state) ? json_decode($state, true) : $state)
-                                    ->columnSpanFull(),
                             ])
                             ->columns(2),
 
@@ -420,14 +438,15 @@ class ProductResource extends Resource
                             ]),
 
                         Forms\Components\Section::make('Region')
-                            ->description('Region this product is sold in. The card badge (NA, EU…) and country flag come from the selected region.')
+                            ->description('Regions this product is sold in. The card badge (NA, EU…) and country flag come from the first selected region.')
                             ->schema([
-                                Forms\Components\Select::make('region_id')
-                                    ->label('Region')
-                                    ->relationship('region', 'name')
+                                Forms\Components\Select::make('regions')
+                                    ->label('Region(s)')
+                                    ->relationship('regions', 'name')
                                     ->getOptionLabelFromRecordUsing(fn ($record) =>
                                         $record->code ? "{$record->name} ({$record->code})" : $record->name
                                     )
+                                    ->multiple()
                                     ->searchable()
                                     ->preload()
                                     ->native(false)
@@ -464,26 +483,44 @@ class ProductResource extends Resource
 
                         Forms\Components\Section::make('Media')
                             ->schema([
-                                SpatieMediaLibraryFileUpload::make('featured_image')
-                                    ->label('Thumbnail (upload)')
-                                    ->collection('product_featured_image')
-                                    ->image()
-                                    ->imageEditor(),
+                                // Shown on edit when no Curator thumbnail is set yet —
+                                // lets the user see the legacy Spatie/JSON image before replacing it.
+                                Forms\Components\Placeholder::make('legacy_thumbnail_preview')
+                                    ->label('Current Thumbnail')
+                                    ->helperText('This image comes from a legacy upload. Use the Thumbnail picker below to replace it with a Curator-managed image.')
+                                    ->content(function ($record): \Illuminate\Contracts\Support\Htmlable {
+                                        $src = $record?->getFirstMediaUrl('product_featured_image');
+                                        if (! $src) {
+                                            $imgs = is_array($record?->images) ? $record->images : [];
+                                            $src  = $imgs[0] ?? null;
+                                        }
+                                        if (! $src) {
+                                            return new \Illuminate\Support\HtmlString('<span style="color:#6b7280;font-size:13px;">No image on record.</span>');
+                                        }
+                                        return new \Illuminate\Support\HtmlString(
+                                            '<img src="' . e($src) . '" style="height:96px;border-radius:8px;object-fit:cover;border:1px solid rgba(0,0,0,.1);" />'
+                                        );
+                                    })
+                                    ->visible(fn ($record) => $record && ! $record->featured_image_id)
+                                    ->columnSpanFull(),
 
-                                SpatieMediaLibraryFileUpload::make('gallery_upload')
-                                    ->label('Gallery (upload)')
-                                    ->collection('product_gallery')
+                                \Awcodes\Curator\Components\Forms\CuratorPicker::make('featured_image_id')
+                                    ->label('Thumbnail')
+                                    ->helperText('Main product image shown on cards and in the detail header.')
+                                    ->columnSpanFull(),
+
+                                \Awcodes\Curator\Components\Forms\CuratorPicker::make('gallery_ids')
+                                    ->label('Gallery Images')
+                                    ->helperText('Additional images shown in the gallery popup.')
                                     ->multiple()
-                                    ->reorderable()
-                                    ->image()
-                                    ->imageEditor(),
+                                    ->columnSpanFull(),
 
                                 Forms\Components\Textarea::make('images')
                                     ->label('Image URLs (JSON array — seeded / API-imported products)')
                                     ->rows(4)
                                     ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT) : $state)
                                     ->dehydrateStateUsing(fn ($state) => is_string($state) ? json_decode($state, true) : $state)
-                                    ->helperText('Paths like /img/valorant/skin_img_01.png. Uploads above take priority in the API.')
+                                    ->helperText('Seeded/imported image paths. Curator picks above take priority in the API.')
                                     ->columnSpanFull(),
                             ]),
 
@@ -500,27 +537,34 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                // Shows Spatie-uploaded image when present, falls back to seeded JSON images
-                Tables\Columns\TextColumn::make('thumbnail')
-                    ->label('Image')
-                    ->html()
-                    ->state(function (Product $record): string {
-                        $src = $record->getFirstMediaUrl('product_featured_image');
-                        if (! $src) {
-                            $imgs = is_array($record->images) ? $record->images : [];
-                            $src  = $imgs[0] ?? '';
+                // Thumbnail — Curator → Spatie media → JSON images fallback
+                Tables\Columns\ImageColumn::make('thumbnail_url')
+                    ->label('')
+                    ->getStateUsing(function (Product $record): ?string {
+                        if ($record->featured_image_id) {
+                            $media = \App\Models\CuratorMedia::find($record->featured_image_id);
+                            if ($media?->url) return $media->url;
                         }
-                        if (! $src) {
-                            return '<div style="width:56px;height:56px;background:#1f2937;border-radius:6px;"></div>';
-                        }
-                        return '<img src="' . e($src) . '" style="width:56px;height:56px;object-fit:cover;border-radius:6px;" />';
+                        $spatie = $record->getFirstMediaUrl('product_featured_image');
+                        if ($spatie) return $spatie;
+                        $imgs = is_array($record->images) ? $record->images : [];
+                        return $imgs[0] ?? null;
                     })
-                    ->alignCenter(),
+                    ->square()
+                    ->size(52)
+                    ->defaultImageUrl(fn () => 'https://placehold.co/52x52/1f2937/1f2937'),
 
+                // Product name + SKU sub-line; tooltip shows full name when truncated
                 Tables\Columns\TextColumn::make('name')
-                    ->label('Title')
+                    ->label('Product')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->limit(50)
+                    ->tooltip(fn (Product $record): ?string =>
+                        mb_strlen($record->name) > 50 ? $record->name : null
+                    )
+                    ->description(fn (Product $record): ?string => $record->sku ?: null)
+                    ->wrap(),
 
                 Tables\Columns\TextColumn::make('game.name')
                     ->label('Game')
@@ -539,60 +583,107 @@ class ProductResource extends Resource
                     ->color(fn (Product $record): string => match ($record->accountType?->slug) {
                         Product::ACCOUNT_VERIFIED           => 'primary',
                         Product::ACCOUNT_INACTIVE_EXCLUSIVE => 'danger',
-                        Product::ACCOUNT_NFA               => 'warning',
+                        Product::ACCOUNT_NFA                => 'warning',
                         Product::ACCOUNT_NFA_INACTIVE       => 'gray',
                         Product::ACCOUNT_STANDARD           => 'success',
                         default                             => 'gray',
                     })
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('section.label')
-                    ->label('Section')
-                    ->sortable(),
+                // Regions displayed as stacked badges (one per region code)
+                Tables\Columns\TextColumn::make('regions.code')
+                    ->label('Region')
+                    ->badge()
+                    ->color('info')
+                    ->separator(',')
+                    ->sortable(false),
 
                 Tables\Columns\TextColumn::make('price')
+                    ->label('Price')
                     ->money('USD')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('stock_qty')
                     ->label('Stock')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->alignCenter(),
 
-                Tables\Columns\IconColumn::make('is_visible')
-                    ->label('Published')
-                    ->boolean()
+                // Inline toggle — lets admin publish/unpublish without opening edit
+                Tables\Columns\ToggleColumn::make('is_visible')
+                    ->label('Live')
                     ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('game')
-                    ->relationship('game', 'name'),
+                    ->relationship('game', 'name')
+                    ->preload(),
 
                 Tables\Filters\SelectFilter::make('account_type')
                     ->label('Account Type')
-                    ->relationship('accountType', 'name'),
+                    ->relationship('accountType', 'name')
+                    ->preload(),
 
-                Tables\Filters\SelectFilter::make('region')
+                Tables\Filters\SelectFilter::make('regions')
                     ->label('Region')
-                    ->relationship('region', 'name'),
+                    ->relationship('regions', 'name')
+                    ->preload(),
+
+                Tables\Filters\SelectFilter::make('section')
+                    ->label('Section')
+                    ->relationship('section', 'label')
+                    ->preload(),
 
                 Tables\Filters\SelectFilter::make('skinTags')
                     ->label('Skin Type')
-                    ->relationship('skinTags', 'name'),
+                    ->relationship('skinTags', 'name')
+                    ->preload(),
 
                 Tables\Filters\TernaryFilter::make('is_visible')
-                    ->label('Published'),
+                    ->label('Published')
+                    ->trueLabel('Published only')
+                    ->falseLabel('Hidden only'),
             ])
+            ->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
+            ->filtersFormColumns(3)
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->tooltip('Edit'),
+                Tables\Actions\DeleteAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->tooltip('Delete'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('publish')
+                        ->label('Publish Selected')
+                        ->icon('heroicon-o-eye')
+                        ->color('success')
+                        ->action(fn (\Illuminate\Database\Eloquent\Collection $records) =>
+                            $records->each->update(['is_visible' => true])
+                        )
+                        ->deselectRecordsAfterCompletion(),
+
+                    Tables\Actions\BulkAction::make('unpublish')
+                        ->label('Unpublish Selected')
+                        ->icon('heroicon-o-eye-slash')
+                        ->color('warning')
+                        ->action(fn (\Illuminate\Database\Eloquent\Collection $records) =>
+                            $records->each->update(['is_visible' => false])
+                        )
+                        ->deselectRecordsAfterCompletion(),
+
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('created_at', 'desc')
+            ->striped()
+            ->paginated([10, 25, 50, 100]);
     }
 
     public static function getRelations(): array
@@ -609,17 +700,4 @@ class ProductResource extends Resource
         ];
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────────────
-
-    protected static function computeDiscount(Forms\Get $get, Forms\Set $set): void
-    {
-        $price     = (float) $get('price');
-        $compareAt = (float) $get('compare_at_price');
-
-        if ($compareAt > 0 && $price > 0 && $compareAt > $price) {
-            $set('discount_percent', (int) round((($compareAt - $price) / $compareAt) * 100));
-        } else {
-            $set('discount_percent', null);
-        }
-    }
 }

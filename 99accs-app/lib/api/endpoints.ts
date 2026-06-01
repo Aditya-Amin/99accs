@@ -2,7 +2,7 @@ import { api } from './client';
 import type {
   ApiCollection,
   ApiResource,
-  AuthLoginResponse,
+  FooterData,
   HomeData,
   Product,
   Order,
@@ -39,7 +39,13 @@ export interface ProductFilters {
   per_page?: number;
 }
 
-export const getHome = () => api<ApiResource<HomeData>>('/home');
+// Footer + home are global, near-static config rendered into every layout. With
+// the client's default `no-store` they'd be re-fetched on every render AND every
+// route prefetch, saturating the single-threaded dev server. `force-cache` lets
+// one fetch be reused across the whole render tree. (Flushes on server restart
+// or an explicit revalidateTag/Path; fine for near-static config.)
+export const getHome   = () => api<ApiResource<HomeData>>('/home',   { cache: 'force-cache' });
+export const getFooter = () => api<ApiResource<FooterData>>('/footer', { cache: 'force-cache' });
 
 export const getProducts = (filters: ProductFilters = {}) => {
   const params = new URLSearchParams();
@@ -123,29 +129,68 @@ export const submitContact = (body: {
   message: string;
 }) => api<{ message: string }>('/support/contact', { method: 'POST', body: JSON.stringify(body) });
 
+// Auth helpers route through the Next.js BFF (app/api/auth/*) so the Sanctum
+// token can be stored in an httpOnly cookie that JS cannot read. The BFF
+// strips the token from the response body before forwarding to the client.
+type AuthBffResponse = { data: { user: AuthUser } };
+
+const bff = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
+  const res = await fetch(path, {
+    credentials: 'include',
+    ...init,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      ...(init.headers ?? {}),
+    },
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = json as { code?: string; message?: string; errors?: Record<string, string[]> };
+    throw Object.assign(new Error(err.message ?? `Request failed (${res.status})`), {
+      status: res.status,
+      code: err.code,
+      errors: err.errors,
+    });
+  }
+  return json as T;
+};
+
 export const login = (email: string, password: string) =>
-  api<AuthLoginResponse>('/login', {
+  bff<AuthBffResponse>('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
 
 export const register = (name: string, email: string, password: string, password_confirmation: string) =>
-  api<AuthLoginResponse>('/register', {
+  bff<AuthBffResponse>('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify({ name, email, password, password_confirmation }),
   });
 
 export const forgotPassword = (email: string) =>
-  api<{ message: string }>('/forgot-password', {
+  bff<{ message: string }>('/api/auth/forgot-password', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });
 
-export const logout = (token: string) =>
-  api<{ message: string }>('/logout', { method: 'POST', token });
+export const resetPassword = (token: string, email: string, password: string, password_confirmation: string) =>
+  bff<AuthBffResponse>('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, email, password, password_confirmation }),
+  });
 
-export const getMe = (token: string) =>
-  api<ApiResource<AuthUser>>('/user', { token });
+export const changePassword = (current_password: string, password: string, password_confirmation: string) =>
+  bff<{ message: string }>('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password, password, password_confirmation }),
+  });
+
+export const logout = () =>
+  bff<{ message: string }>('/api/auth/logout', { method: 'POST' });
+
+export const getMe = () =>
+  bff<{ data: AuthUser | null }>('/api/auth/me');
 
 export const getDashboard = (token: string) =>
   api<ApiResource<AccountDashboard>>('/account/dashboard', { token });
@@ -161,6 +206,22 @@ export const getProfile = (token: string) =>
 
 export const updateProfile = (token: string, body: Partial<AuthUser & { password: string; password_confirmation: string }>) =>
   api<ApiResource<AuthUser>>('/account/profile', { method: 'PATCH', body: JSON.stringify(body), token });
+
+// BFF variant — reads the token from the httpOnly cookie server-side.
+// Use this from client components (the token is never exposed to the browser).
+export const updateProfileBff = (body: Partial<{
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}>) =>
+  bff<{ data: AuthUser }>('/api/account/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
 
 export const getWishlist = (token: string, page = 1) =>
   api<ApiCollection<WishlistItem>>(`/account/wishlist?page=${page}`, { token });

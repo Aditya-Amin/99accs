@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import type { SupportTicket, SupportTicketStatus } from '@/lib/api/types';
 
 function SearchIcon() {
   return (
@@ -26,37 +27,58 @@ function PlusCircleIcon() {
   );
 }
 
-interface TicketRow {
-  id: string;
-  title: string;
-  excerpt: string;
-  replies: number;
-  logo: string;
-  status: string;
-  statusClass: string;
-  date: string;
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-const ALL_TICKETS: TicketRow[] = [
-  { id: '#15941', title: 'How Valorant Elo Boost Work?', excerpt: 'Just choose your preferred platform, pick your desired rank, and add optional extras — then sit back and relax. Our elite boosters will', replies: 0, logo: '/img/icons/valorant.svg', status: 'New', statusClass: 'new', date: 'Nov 14, 2023' },
-  { id: '#27853', title: 'New Skin Texture Issues on Ryodan', excerpt: "Personally handle your order and ensure you reach your desired rank in no time. We're committed to excellence!", replies: 5, logo: '/img/icons/fortnite.svg', status: 'Open', statusClass: 'open', date: 'Dec 2, 2023' },
-  { id: '#92648', title: "Can't connect to the server", excerpt: 'Our team is ready to assist with any skin-related questions and will respond promptly. We value your satisfaction!', replies: 8, logo: '/img/icons/valorant.svg', status: 'open', statusClass: 'open', date: 'Oct 28, 2023' },
-  { id: '#18573', title: 'Unauthorized Account Access from New Halaran', excerpt: 'Our services are performed by top-tier Radiant or Immortal players with deep game sense and mechanical mastery.', replies: 13, logo: '/img/icons/league.svg', status: 'Closed', statusClass: 'closed', date: 'Sep 19, 2023' },
-  { id: '#63957', title: 'Report a toxic player', excerpt: "We also use VPN protection and offline mode to ensure safety and discretion. All our pros don't use cheating software, bots, or hacks.", replies: 3, logo: '/img/icons/fortnite.svg', status: 'New', statusClass: 'new', date: 'Aug 7, 2023' },
-  { id: '#29586', title: 'Unauthorized Account Access from New Halaran', excerpt: 'Our services are performed by top-tier Radiant or Immortal players with deep game sense and mechanical mastery.', replies: 10, logo: '/img/icons/league.svg', status: 'Closed', statusClass: 'closed', date: 'July 1, 2023' },
-  { id: '#73582', title: 'Game Crashes on Launch for Valorant', excerpt: "Time to grind to reach the rank you'd like—a Valorant Elo Boost might be exactly what you need.", replies: 5, logo: '/img/icons/league.svg', status: 'Closed', statusClass: 'closed', date: 'July 1, 2023' },
-  { id: '#84692', title: "Can't connect to the server", excerpt: 'Our team is ready to assist with any skin-related questions and will respond promptly. We value your satisfaction!', replies: 5, logo: '/img/icons/league.svg', status: 'Closed', statusClass: 'closed', date: 'July 1, 2023' },
-  { id: '#73582', title: 'How Valorant Elo Boost Work?', excerpt: 'Just choose your preferred platform, pick your desired rank, and add optional extras — then sit back and relax.', replies: 2, logo: '/img/icons/valorant.svg', status: 'Open', statusClass: 'open', date: 'Oct 28, 2023' },
-];
-
-const SUB_TAB_FILTER: Record<string, string[]> = {
-  newTab1: ['New', 'Open', 'open', 'Closed'],
-  newTab2: ['New'],
-  newTab3: ['Open', 'open'],
-  newTab4: ['Closed'],
+const GAME_LOGO: Record<string, string> = {
+  valorant: '/img/icons/valorant.svg',
+  fortnite: '/img/icons/fortnite.svg',
+  legends:  '/img/icons/league.svg',
 };
 
-function TicketsTable({ rows }: { rows: TicketRow[] }) {
+const STATUS_CSS: Record<SupportTicketStatus, string> = {
+  new:    'new',
+  open:   'open',
+  closed: 'closed',
+};
+
+const STATUS_LABEL: Record<SupportTicketStatus, string> = {
+  new:    'New',
+  open:   'Open',
+  closed: 'Closed',
+};
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+const TAB_STATUSES: Record<string, SupportTicketStatus[] | null> = {
+  newTab1: null,                     // all
+  newTab2: ['new'],
+  newTab3: ['open'],
+  newTab4: ['closed'],
+};
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function TicketsTable({ rows, search }: { rows: SupportTicket[]; search: string }) {
+  const q = search.toLowerCase();
+  const visible = q
+    ? rows.filter(
+        (t) =>
+          t.ticket_number.toLowerCase().includes(q) ||
+          t.subject.toLowerCase().includes(q) ||
+          (t.order_number ?? '').toLowerCase().includes(q),
+      )
+    : rows;
+
+  if (visible.length === 0) {
+    return (
+      <p style={{ color: 'rgba(255,255,255,0.4)', padding: '24px', textAlign: 'center' }}>
+        No tickets found.
+      </p>
+    );
+  }
+
   return (
     <table className="support__table-inner">
       <thead>
@@ -70,17 +92,23 @@ function TicketsTable({ rows }: { rows: TicketRow[] }) {
         </tr>
       </thead>
       <tbody>
-        {rows.map((row, i) => (
-          <tr key={i}>
-            <td className="product__id">{row.id}</td>
+        {visible.map((ticket) => (
+          <tr key={ticket.id}>
+            <td className="product__id">{ticket.ticket_number}</td>
             <td className="product__conversation">
-              <h2 className="title"><Link href="/support/articles">{row.title}</Link></h2>
-              <p>{row.excerpt}</p>
+              <h2 className="title">
+                <Link href={`/support/tickets/${ticket.id}`}>{ticket.subject}</Link>
+              </h2>
+              <p>{ticket.preview}</p>
             </td>
-            <td className="product__reply"><span>{row.replies}</span></td>
-            <td className="product__logo"><img src={row.logo} alt="" /></td>
-            <td className="product__status"><span className={row.statusClass}>{row.status}</span></td>
-            <td className="product__date"><span>{row.date}</span></td>
+            <td className="product__reply"><span>{ticket.reply_count}</span></td>
+            <td className="product__logo">
+              <img src={GAME_LOGO[ticket.game] ?? '/img/icons/valorant.svg'} alt={ticket.game} />
+            </td>
+            <td className="product__status">
+              <span className={STATUS_CSS[ticket.status]}>{STATUS_LABEL[ticket.status]}</span>
+            </td>
+            <td className="product__date"><span>{fmtDate(ticket.created_at)}</span></td>
           </tr>
         ))}
       </tbody>
@@ -88,27 +116,51 @@ function TicketsTable({ rows }: { rows: TicketRow[] }) {
   );
 }
 
-export function SupportPane() {
-  const [subTab, setSubTab] = useState('newTab1');
+// ── Main component ────────────────────────────────────────────────────────────
 
-  const filteredRows = ALL_TICKETS.filter((r) =>
-    SUB_TAB_FILTER[subTab]?.includes(r.status)
-  );
+interface Props {
+  initialTickets: SupportTicket[];
+}
+
+export function SupportPane({ initialTickets }: Props) {
+  const [subTab, setSubTab] = useState('newTab1');
+  const [search, setSearch]   = useState('');
+  const [gameFilter, setGameFilter] = useState('all');
+
+  const allowedStatuses = TAB_STATUSES[subTab];
+
+  const filtered = initialTickets.filter((t) => {
+    if (allowedStatuses && !allowedStatuses.includes(t.status)) return false;
+    if (gameFilter !== 'all' && t.game !== gameFilter) return false;
+    return true;
+  });
 
   return (
     <div className="support__table-wrap-two account-pane active">
       <div className="support__table-top">
-        <form action="#" className="support__table-form">
+        <form action="#" className="support__table-form" onSubmit={(e) => e.preventDefault()}>
           <div className="form-grp">
             <label htmlFor="support-search"><SearchIcon /></label>
-            <input type="text" id="support-search" placeholder="Search..." />
+            <input
+              type="text"
+              id="support-search"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
           <div className="select-grp">
-            <select id="support-product" name="support-product" className="country-name">
-              <option value="All Products">All Products</option>
-              <option value="Valorant">Valorant</option>
-              <option value="Fortnite">Fortnite</option>
-              <option value="League Of Legends">League Of Legends</option>
+            <select
+              id="support-product"
+              name="support-product"
+              className="country-name"
+              value={gameFilter}
+              onChange={(e) => setGameFilter(e.target.value)}
+            >
+              <option value="all">All Products</option>
+              <option value="valorant">Valorant</option>
+              <option value="fortnite">Fortnite</option>
+              <option value="legends">League Of Legends</option>
             </select>
           </div>
           <button type="button"><SortIcon /></button>
@@ -136,8 +188,8 @@ export function SupportPane() {
         ))}
       </div>
       <div className="support__table-tab">
-        <div className="table-pane active">
-          <TicketsTable rows={filteredRows} />
+        <div className="table-pane active" style={{ display: 'block' }}>
+          <TicketsTable rows={filtered} search={search} />
         </div>
       </div>
     </div>

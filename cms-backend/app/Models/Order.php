@@ -17,6 +17,7 @@ class Order extends Model
     public const STATUS_CANCELLED  = 'cancelled';
 
     protected $fillable = [
+        'legacy_id',
         'customer_id',
         'number',
         'checkout_token',
@@ -29,7 +30,6 @@ class Order extends Model
         'payment_url',
         'expires_at',
         'paid_at',
-        // financial extras from existing migration
         'shipping_cost',
         'vat_tax',
         'discount_amount',

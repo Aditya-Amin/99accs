@@ -14,8 +14,8 @@ export function BannerCatItem({ href, image, alt }: { href: string; image: strin
 export function BannerCatWrap({ categories }: { categories: BannerCategory[] }) {
   return (
     <div className="banner__cat-wrap wow fadeInUp" data-wow-delay=".8s">
-      {categories.map((c) => (
-        <BannerCatItem key={c.id} href={c.href} image={c.image} alt={c.alt} />
+      {categories.map((c, i) => (
+        <BannerCatItem key={i} href={c.href} image={c.image} alt={c.alt} />
       ))}
     </div>
   );

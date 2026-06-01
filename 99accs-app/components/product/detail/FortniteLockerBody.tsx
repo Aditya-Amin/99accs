@@ -4,6 +4,7 @@ import ProductDetailContent from './ProductDetailContent';
 import { FortniteStatIcon } from './FortniteAccountStatIcons';
 import { SeasonStatIcon } from './FortniteSeasonIcons';
 import { CurrentSeasonStatIcon } from './FortniteCurrentSeasonIcons';
+import DescriptionSections from './DescriptionSections';
 import type { Product, LockerTabKey } from '@/lib/api/types';
 
 interface FortniteLockerBodyProps {
@@ -29,7 +30,7 @@ export default function FortniteLockerBody({ product }: FortniteLockerBodyProps)
       <div className="container">
         <div className="shop__details-wrap shop__details-wrap-two">
           <div className="shop__details-thumb shop__details-thumb-four">
-            <img src={product.images[0] ?? '/img/fortnite/shop_details.jpg'} alt={product.title} />
+            {product.images[0] && <img src={product.images[0]} alt={product.title} />}
           </div>
           <ProductDetailContent product={product} variant="fortnite_four" showCountry={false} />
         </div>
@@ -220,11 +221,11 @@ export default function FortniteLockerBody({ product }: FortniteLockerBodyProps)
           )}
         </div>
 
-        {product.description && (
-          <div className="shop__description-wrap">
-            <div dangerouslySetInnerHTML={{ __html: product.description }} />
-          </div>
-        )}
+        <DescriptionSections
+          sections={product.description_sections ?? []}
+          faqItems={product.faq_items}
+          htmlFallback={product.description}
+        />
       </div>
     </section>
   );

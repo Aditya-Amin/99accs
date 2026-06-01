@@ -30,12 +30,21 @@ class ImageTileUpload extends FileUpload
     {
         parent::setUp();
 
+        $idleLabel =
+            '<svg class="upload-idle-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' .
+                '<path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5"/>' .
+                '<path d="M16.5 7.5l-4.5-4.5-4.5 4.5M12 3v13.5"/>' .
+            '</svg>' .
+            '<span class="upload-idle-label">' .
+                '<strong>Drop image here</strong>' .
+                '<span>or <span class="filepond--label-action">browse files</span></span>' .
+            '</span>';
+
         $this->disk('public')
             ->live()
+            ->panelLayout('integrated')
+            ->placeholder($idleLabel)
             ->acceptedFileTypes(['image/svg+xml', 'image/png', 'image/jpeg'])
-            // Tell Filepond which extensions map to each accepted MIME so
-            // browsers that report SVG as application/xml or text/xml still
-            // pass client-side validation when the file ends in .svg.
             ->mimeTypeMap([
                 'image/svg+xml' => 'svg',
                 'image/png'     => 'png',
@@ -67,6 +76,7 @@ class ImageTileUpload extends FileUpload
     public static function for(string $name, string $label, string $directory): static
     {
         return static::make($name)
+            ->label($label)
             ->tileLabel($label)
             ->directory($directory);
     }

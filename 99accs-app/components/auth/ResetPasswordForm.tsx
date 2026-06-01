@@ -2,10 +2,19 @@
 import { useState, FormEvent } from 'react';
 
 interface Props {
+  /** Real password-reset token from the email link. */
   token: string;
+  /** Email the reset was issued for — Laravel requires it on submit. */
+  email: string;
 }
 
-export function ResetPasswordForm({ token }: Props) {
+interface ResetError {
+  code?: string;
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
+export function ResetPasswordForm({ token, email }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -28,24 +37,27 @@ export function ResetPasswordForm({ token }: Props) {
         return;
       }
 
-      const res = await fetch('/api/mock/reset-password/forced', {
+      const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          reset_token: token,
+          token,
+          email,
           password,
           password_confirmation: confirm,
         }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { message?: string };
-        throw new Error(body.message ?? 'Reset failed.');
+        const body = (await res.json().catch(() => ({}))) as ResetError;
+        const firstFieldError = body.errors ? Object.values(body.errors).flat()[0] : undefined;
+        throw new Error(firstFieldError ?? body.message ?? 'Reset failed.');
       }
-      // Auth cookie is now set by the server. Hard-navigate to /account so
-      // the proxy and server layout pick up the new auth state.
+      // BFF set the auth cookie. Hard-navigate so the proxy + server layout
+      // pick up the new session.
       window.location.assign('/account');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Reset failed. Please log in again.');
+      setError(e instanceof Error ? e.message : 'Reset failed. Please request a new link.');
       setLoading(false);
     }
   };
@@ -54,7 +66,7 @@ export function ResetPasswordForm({ token }: Props) {
     <form onSubmit={handleSubmit} className="login-form">
       <div className="form-grp">
         <label htmlFor="new-password">New password</label>
-        <input id="new-password" name="password" type="password" required minLength={10} placeholder="At least 10 characters" />
+        <input id="new-password" name="password" type="password" required minLength={10} placeholder="At least 10 characters, letters + numbers" />
       </div>
       <div className="form-grp">
         <label htmlFor="confirm-password">Confirm password</label>

@@ -40,26 +40,31 @@ class Product extends Model implements HasMedia
 
     protected $fillable = [
         // Core
-        'name', 'slug', 'sku', 'description', 'short_description', 'is_visible',
+        'name', 'slug', 'sku', 'description', 'highlights', 'is_visible',
         // Pricing
-        'price', 'price_max', 'compare_at_price', 'discount_percent', 'badge_icon',
+        'price', 'regular_price', 'badge_icon',
         // Inventory
         'stock_qty',
         // Media
-        'images',
-        // Taxonomy FKs (region drives country code / flag for the card)
-        'game_id', 'account_type_id', 'section_id', 'region_id',
-        // Denormalized skin M:N column (synced from pivot)
-        'skin_ids',
+        'images', 'featured_image_id', 'gallery_ids',
+        // Taxonomy FKs
+        'game_id', 'account_type_id', 'section_id',
+        // Denormalized M:N columns (synced from pivots)
+        'region_ids', 'skin_ids',
         'rank', 'has_gallery',
         'agents', 'skins', 'buddies', 'specs', 'feature_badges',
         // Detail-only (populated by game API import)
         'agents_detailed', 'agents_count',
         'profile_info', 'skin_inventory', 'skin_filters', 'buddy_inventory',
         'account_level', 'account_stats', 'locker', 'seasons',
-        'description_sections', 'min_quantity', 'last_match_label', 'guarantee',
+        'description_sections', 'faq_items', 'min_quantity', 'last_match_label',
+        'guarantee_title', 'guarantee_body',
         // Sync metadata
         'source_provider', 'external_id', 'synced_at',
+        // Legacy / WordPress import
+        'legacy_id', 'legacy_categories',
+        // SEO (consumed by Next.js generateMetadata)
+        'meta_title', 'meta_description', 'meta_keywords', 'is_cornerstone', 'canonical_url',
     ];
 
     protected $casts = [
@@ -78,15 +83,19 @@ class Product extends Model implements HasMedia
         'account_stats'      => 'array',
         'locker'             => 'array',
         'seasons'            => 'array',
+        'highlights'           => 'array',
+        'faq_items'            => 'array',
         'description_sections' => 'array',
-        'guarantee'          => 'array',
         'is_visible'         => 'boolean',
         'has_gallery'        => 'boolean',
         'price'              => 'decimal:2',
-        'price_max'          => 'decimal:2',
-        'compare_at_price'   => 'decimal:2',
+        'regular_price'      => 'decimal:2',
         'synced_at'          => 'datetime',
         'skin_ids'           => 'array',
+        'region_ids'         => 'array',
+        'gallery_ids'        => 'array',
+        'legacy_categories'  => 'array',
+        'is_cornerstone'     => 'boolean',
     ];
 
     // ─── Relationships ────────────────────────────────────────────────────────
@@ -106,10 +115,10 @@ class Product extends Model implements HasMedia
         return $this->belongsTo(Section::class);
     }
 
-    // Single-region FK — drives country badge + flag on the product card.
-    public function region(): BelongsTo
+    // M:N — source of truth for region assignments (migrated from region_id FK).
+    public function regions(): BelongsToMany
     {
-        return $this->belongsTo(Region::class);
+        return $this->belongsToMany(Region::class, 'product_region');
     }
 
     // M:N — source of truth for skin taxonomy assignments (write path)

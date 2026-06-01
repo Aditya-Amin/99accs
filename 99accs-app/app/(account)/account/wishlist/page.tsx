@@ -1,4 +1,4 @@
-import { getWishlist } from '@/lib/api/endpoints';
+import { getWishlist } from '@/lib/api/server';
 import ProductCard from '@/components/product/ProductCard';
 
 export default async function WishlistPage() {

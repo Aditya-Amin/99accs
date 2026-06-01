@@ -14,7 +14,7 @@ export default function CartClient() {
     return (
       <div className="text-center" style={{ padding: '80px 0' }}>
         <p style={{ marginBottom: 24, opacity: 0.7 }}>Your cart is empty.</p>
-        <Link href="/shop/valorant" className="tg-btn">Continue shopping</Link>
+        <Link href="/product-category/valorant" className="tg-btn">Continue shopping</Link>
       </div>
     );
   }

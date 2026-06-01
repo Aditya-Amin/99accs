@@ -1,7 +1,10 @@
-import type { ProductDescriptionSection } from '@/lib/api/types';
+import type { ProductDescriptionSection, DescriptionFaqItem } from '@/lib/api/types';
+import ProductFaqSection from './ProductFaqSection';
 
 interface DescriptionSectionsProps {
   sections: ProductDescriptionSection[];
+  faqItems?: DescriptionFaqItem[];
+  htmlFallback?: string | null;
 }
 
 function SectionBody({ section }: { section: ProductDescriptionSection }) {
@@ -13,38 +16,52 @@ function SectionBody({ section }: { section: ProductDescriptionSection }) {
     );
   }
   if (section.type === 'list') {
-    const className = section.list_class ? `list-wrap ${section.list_class}` : 'list-wrap inside-list';
+    const cls = section.list_class ? `list-wrap ${section.list_class}` : 'list-wrap inside-list';
     return (
-      <ul className={className}>
+      <ul className={cls}>
         {section.items.map((it, i) => <li key={i}>{it}</li>)}
       </ul>
     );
   }
-  return (
-    <ul className="list-wrap faq-list">
-      {section.items.map((it, i) => (
-        <li key={i} className="faq-list-item">
-          <h2 className="title">{it.question}</h2>
-          <p>{it.answer}</p>
-        </li>
-      ))}
-    </ul>
-  );
+  return null;
 }
 
-export default function DescriptionSections({ sections }: DescriptionSectionsProps) {
-  if (!sections.length) return null;
-  const [first, ...rest] = sections;
+export default function DescriptionSections({ sections, faqItems, htmlFallback }: DescriptionSectionsProps) {
+  // Rich-text HTML description takes priority — renders with full emoji/formatting support.
+  // description_sections is used only when description is absent.
+  if (htmlFallback) {
+    return (
+      <div
+        className="shop__description-wrap"
+        dangerouslySetInnerHTML={{ __html: htmlFallback }}
+      />
+    );
+  }
+
+  const contentSections = (Array.isArray(sections) ? sections : []).filter((s) => s.type !== 'faq');
+  const hasFaq = (faqItems?.length ?? 0) > 0;
+
+  if (!contentSections.length && !hasFaq) return null;
+
+  const [first, ...rest] = contentSections;
 
   return (
     <div className="shop__description-wrap">
-      <SectionBody section={first} />
+      {first && (
+        <>
+          {first.heading && <h2 className="title">{first.heading}</h2>}
+          <SectionBody section={first} />
+        </>
+      )}
+
       {rest.map((s, i) => (
         <div key={i} className="shop__description-inner">
           <h2 className="title-two">{s.heading}</h2>
           <SectionBody section={s} />
         </div>
       ))}
+
+      {hasFaq && <ProductFaqSection items={faqItems!} />}
     </div>
   );
 }

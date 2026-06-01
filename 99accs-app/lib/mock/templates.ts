@@ -13,6 +13,7 @@ import type {
   ProductAgentEntry,
   ProductProfileInfo,
   ProductDescriptionSection,
+  DescriptionFaqItem,
   ProductGuarantee,
   ProductLevel,
   ProductStat,
@@ -24,6 +25,21 @@ import type {
   ProductSkinFilters,
 } from '@/lib/api/types';
 import { accountTypeToLayout } from '@/lib/api/layout';
+
+const VALORANT_FAQ_ITEMS: DescriptionFaqItem[] = [
+  {
+    question: 'What ranks are available in Valorant accounts?',
+    answer: 'We have accounts with various ranks: from Iron to Radiant. Each account card shows the current rank, peak rank achieved, and account region.',
+  },
+  {
+    question: 'How fast is the credentials delivery?',
+    answer: "Login credentials appear in your personal account immediately after purchase. You just need to top up your balance and place an order — you'll get account access instantly.",
+  },
+  {
+    question: 'Can I use the account in any region?',
+    answer: 'Each account is tied to a specific region (EU, NA, AP, etc.). The region is specified in the account description. Make sure to choose an account with your preferred region for comfortable gameplay.',
+  },
+];
 
 const GUARANTEE: ProductGuarantee = {
   title: '99Accs Guarantee',
@@ -546,6 +562,7 @@ export function applyDetailTemplate(p: Product): Product {
       merged.skin_filters = VALORANT_SKIN_FILTERS;
       merged.buddy_inventory = VALORANT_BUDDY_INVENTORY;
       merged.description_sections = VALORANT_BUY_DESCRIPTION_SECTIONS;
+      merged.faq_items = VALORANT_FAQ_ITEMS;
       break;
 
     case 'fortnite_four': // shop-details-4.html — fortnite nfa_inactive
@@ -554,11 +571,13 @@ export function applyDetailTemplate(p: Product): Product {
       merged.locker = FORTNITE_LOCKER;
       merged.seasons = FORTNITE_SEASONS;
       merged.description_sections = VALORANT_BUY_DESCRIPTION_SECTIONS;
+      merged.faq_items = VALORANT_FAQ_ITEMS;
       break;
 
     case 'simple_two':    // shop-details-2.html — valorant verified, fortnite nfa_random/nfa_guaranteed
     case 'simple_three':  // shop-details-3.html — legends standard
       merged.description_sections = FORTNITE_BUY_DESCRIPTION_SECTIONS;
+      merged.faq_items = VALORANT_FAQ_ITEMS;
       break;
   }
 

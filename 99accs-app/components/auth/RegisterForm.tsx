@@ -5,6 +5,12 @@ import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
 import { OAuthSimDialog } from './OAuthSimDialog';
 
+interface RegisterError {
+  code?: string;
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
 export function RegisterForm() {
   const params = useSearchParams();
   const redirect = params.get('redirect') || '/account';
@@ -19,18 +25,30 @@ export function RegisterForm() {
     setError('');
     try {
       const fd = new FormData(e.currentTarget);
-      const password = fd.get('password');
-      const res = await fetch('/api/mock/register', {
+      const password = String(fd.get('password') ?? '');
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: fd.get('name'), email: fd.get('email'), password, password_confirmation: password }),
+        credentials: 'include',
+        body: JSON.stringify({
+          name: fd.get('name'),
+          email: fd.get('email'),
+          password,
+          password_confirmation: password,
+        }),
       });
-      if (!res.ok) throw new Error('Registration failed');
-      const json = (await res.json()) as { data: { token: string; user: { id: number; name: string; email: string; created_at: string } } };
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as RegisterError;
+        // Surface field-level validation messages when available (e.g. "email
+        // has already been taken"), otherwise fall back to the message body.
+        const firstFieldError = body.errors ? Object.values(body.errors).flat()[0] : undefined;
+        throw new Error(firstFieldError ?? body.message ?? 'Registration failed.');
+      }
+      const json = (await res.json()) as { data: { user: { id: number; name: string; email: string; created_at: string } } };
       setUser(json.data.user);
       window.location.assign(redirect);
-    } catch {
-      setError('Registration failed. Please try again.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Registration failed. Please try again.');
       setLoading(false);
     }
   };
@@ -48,11 +66,20 @@ export function RegisterForm() {
         </div>
         <div className="form-grp">
           <label htmlFor="reg-password">Password</label>
-          <input type="password" id="reg-password" name="password" placeholder="• • • • • • • •" required />
+          <input
+            type="password"
+            id="reg-password"
+            name="password"
+            placeholder="At least 10 characters, letters + numbers"
+            required
+            minLength={10}
+          />
         </div>
-        <span className="text">A link to set a new password will be sent to your email address.</span>
+        <span className="text">Use at least 10 characters with a mix of letters and numbers.</span>
         {error && <p className="auth-form__error">{error}</p>}
-        <button type="submit" className="tg-btn" disabled={loading}>{loading ? 'Registering...' : 'Register'}</button>
+        <button type="submit" className="tg-btn" disabled={loading}>
+          {loading ? 'Registering...' : 'Register'}
+        </button>
       </form>
       <div className="account__switch">
         <p>Already have an account? <Link href="/login">Login</Link></p>

@@ -12,7 +12,7 @@ interface Props {
 
 export function CartTableRow({ line, onUpdateQty, onRemove }: Props) {
   const { product, quantity } = line;
-  const detailHref = `/shop/${product.game}/${product.slug}`;
+  const detailHref = `/product/${product.slug}`;
 
   return (
     <tr>

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Forms\IconUpload;
 use App\Filament\Resources\RegionResource\Pages;
 use App\Models\Region;
 use Filament\Forms;
@@ -51,7 +50,8 @@ class RegionResource extends Resource
                     ->maxLength(50)
                     ->helperText('Only set when CSS class differs from code.toLowerCase() — e.g. LAS cards use class "ap".'),
 
-                IconUpload::make('flag', 'Country Flag', 'country-flags'),
+                \Awcodes\Curator\Components\Forms\CuratorPicker::make('flag')
+                    ->label('Country Flag'),
 
                 Forms\Components\TextInput::make('sort_order')
                     ->label('Sort Order')
@@ -70,36 +70,58 @@ class RegionResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('flag')
                     ->label('Flag')
-                    ->disk('public')
-                    ->height(48),
+                    ->getStateUsing(fn ($record): ?string => self::resolveMediaUrl($record->flag))
+                    ->height(40)
+                    ->width(60),
 
                 Tables\Columns\TextColumn::make('name')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->weight(\Filament\Support\Enums\FontWeight::Medium),
 
                 Tables\Columns\TextColumn::make('code')
                     ->label('Badge')
                     ->badge()
+                    ->color('primary')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('slug')
-                    ->sortable()
+                    ->badge()
+                    ->color('gray')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Order')
+                    ->alignCenter()
                     ->sortable(),
             ])
             ->defaultSort('sort_order')
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->tooltip('Edit'),
+                Tables\Actions\DeleteAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->tooltip('Delete'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    private static function resolveMediaUrl(mixed $val): ?string
+    {
+        if (!$val) return null;
+        if (ctype_digit((string) $val)) {
+            return \App\Models\CuratorMedia::find((int) $val)?->url;
+        }
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($val);
     }
 
     public static function getRelations(): array

@@ -1,5 +1,5 @@
 import { IconShieldCheck, IconTrophy, IconDelivery, IconWarranty } from '@/components/icons';
-import type { BannerIcon, BannerSubtitle, BannerHeading } from '@/lib/api/types';
+import type { BannerIcon, BannerSubtitle } from '@/lib/api/types';
 
 const ICON_MAP: Record<BannerIcon, React.ComponentType> = {
   shield_check: IconShieldCheck,
@@ -24,12 +24,15 @@ export function BannerSubTitle({ subtitle }: { subtitle: BannerSubtitle }) {
 }
 
 // --- Main heading + description paragraph ---
-export function BannerTitle({ heading, description }: { heading: BannerHeading; description: string }) {
+export function BannerTitle({ heading, description }: { heading: string; description: string }) {
   return (
     <>
-      <h2 className="title wow fadeInUp" data-wow-delay=".4s">
-        {heading.prefix}<span>{heading.highlight}</span>{heading.suffix}
-      </h2>
+      {/* heading is sanitized HTML (server strips all but span/strong/em/br/mark) */}
+      <h2
+        className="title wow fadeInUp"
+        data-wow-delay=".4s"
+        dangerouslySetInnerHTML={{ __html: heading }}
+      />
       <p className="wow fadeInUp" data-wow-delay=".5s">
         {description}
       </p>
@@ -40,7 +43,7 @@ export function BannerTitle({ heading, description }: { heading: BannerHeading; 
 // --- Text block: sub-title + heading + description ---
 interface BannerContentProps {
   subtitle: BannerSubtitle;
-  heading: BannerHeading;
+  heading: string;
   description: string;
 }
 export function BannerContent({ subtitle, heading, description }: BannerContentProps) {

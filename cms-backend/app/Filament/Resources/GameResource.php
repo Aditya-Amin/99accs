@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Forms\IconUpload;
 use App\Filament\Resources\GameResource\Pages;
 use App\Models\Game;
 use Filament\Forms;
@@ -39,7 +38,8 @@ class GameResource extends Resource
                     ->maxLength(255)
                     ->helperText('URL-safe identifier, e.g. valorant'),
 
-                IconUpload::make('icon', 'Icon', 'game-icons')
+                \Awcodes\Curator\Components\Forms\CuratorPicker::make('icon')
+                    ->label('Icon')
                     ->columnSpan(1),
 
                 Forms\Components\TextInput::make('sort_order')
@@ -60,31 +60,52 @@ class GameResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('icon')
                     ->label('Icon')
-                    ->disk('public')
-                    ->height(56),
+                    ->getStateUsing(fn ($record): ?string => self::resolveMediaUrl($record->icon))
+                    ->height(48)
+                    ->width(48),
 
                 Tables\Columns\TextColumn::make('name')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->weight(\Filament\Support\Enums\FontWeight::Medium),
 
                 Tables\Columns\TextColumn::make('slug')
-                    ->sortable()
+                    ->badge()
+                    ->color('gray')
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('sort_order')
                     ->label('Order')
+                    ->alignCenter()
                     ->sortable(),
             ])
             ->defaultSort('sort_order')
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->tooltip('Edit'),
+                Tables\Actions\DeleteAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->tooltip('Delete'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    private static function resolveMediaUrl(mixed $val): ?string
+    {
+        if (!$val) return null;
+        if (ctype_digit((string) $val)) {
+            return \App\Models\CuratorMedia::find((int) $val)?->url;
+        }
+        return \Illuminate\Support\Facades\Storage::disk('public')->url($val);
     }
 
     public static function getRelations(): array

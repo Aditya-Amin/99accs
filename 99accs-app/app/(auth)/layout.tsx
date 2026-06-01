@@ -3,9 +3,11 @@ import { getToken } from '@/lib/auth/session';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import RouteEffects from '@/components/layout/RouteEffects';
+import { getFooter } from '@/lib/api/server';
 
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   if (await getToken()) redirect('/account');
+  const { data: footer } = await getFooter();
   return (
     <>
       <Header />
@@ -28,7 +30,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer data={footer} />
       <RouteEffects />
     </>
   );

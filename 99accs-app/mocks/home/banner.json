@@ -4,11 +4,7 @@
     "icon": "shield_check",
     "text": "Your purchase made on the 99Accs platform are protected by us."
   },
-  "heading": {
-    "prefix": "Your Trusted ",
-    "highlight": "Marketplace",
-    "suffix": " for Game Accounts"
-  },
+  "heading": "Your Trusted <span>Marketplace</span> for Game Accounts",
   "description": "Discover carefully selected high rank accounts and rare skins.",
   "features": [
     { "id": 1, "icon": "trophy", "text": "High-Quality Accounts" },
@@ -16,8 +12,8 @@
     { "id": 3, "icon": "warranty", "text": "Free Warranty and Support" }
   ],
   "categories": [
-    { "id": 1, "href": "/shop/valorant", "image": "/img/images/hero_cat01.jpg", "alt": "Valorant" },
-    { "id": 2, "href": "/shop/fortnite", "image": "/img/images/hero_cat02.jpg", "alt": "Fortnite" },
-    { "id": 3, "href": "/shop/legends", "image": "/img/images/hero_cat03.jpg", "alt": "League of Legends" }
+    { "id": 1, "href": "/product-category/valorant", "image": "/img/images/hero_cat01.jpg", "alt": "Valorant" },
+    { "id": 2, "href": "/product-category/fortnite", "image": "/img/images/hero_cat02.jpg", "alt": "Fortnite" },
+    { "id": 3, "href": "/product-category/legends", "image": "/img/images/hero_cat03.jpg", "alt": "League of Legends" }
   ]
 }

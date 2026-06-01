@@ -44,8 +44,8 @@ function CtaButtonLink({ button }: { button: CtaButton }) {
 export function CtaButtons({ buttons }: { buttons: CtaButton[] }) {
   return (
     <div className="cta__btn">
-      {buttons.map((b) => (
-        <CtaButtonLink key={b.id} button={b} />
+      {buttons.map((b, index) => (
+        <CtaButtonLink key={b.id != null ? b.id : index} button={b} />
       ))}
     </div>
   );

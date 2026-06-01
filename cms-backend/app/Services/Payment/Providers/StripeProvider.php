@@ -3,6 +3,7 @@
 namespace App\Services\Payment\Providers;
 
 use App\Models\Order;
+use App\Models\PaymentGateway;
 use App\Services\Payment\Contracts\PaymentProviderInterface;
 use App\Services\Payment\DTOs\PaymentResultDTO;
 use App\Services\Payment\DTOs\WebhookEventDTO;
@@ -15,9 +16,17 @@ use Stripe\Webhook;
 
 class StripeProvider implements PaymentProviderInterface
 {
-    public function __construct()
+    public function __construct(private readonly PaymentGateway $gateway)
     {
-        Stripe::setApiKey(config('services.stripe.secret'));
+        $secret = $this->gateway->credential('secret_key');
+
+        if (! $secret) {
+            throw new RuntimeException(
+                'Stripe secret_key is not configured. Add it under Settings → Payment Gateways in the admin panel.'
+            );
+        }
+
+        Stripe::setApiKey($secret);
     }
 
     public function createPayment(Order $order): PaymentResultDTO
@@ -46,10 +55,10 @@ class StripeProvider implements PaymentProviderInterface
 
     public function verifyWebhook(Request $request): WebhookEventDTO
     {
-        $secret = config('services.stripe.webhook_secret');
+        $secret = $this->gateway->credential('webhook_secret');
 
         if (! $secret) {
-            throw new RuntimeException('STRIPE_WEBHOOK_SECRET is not configured.');
+            throw new RuntimeException('Stripe webhook_secret is not configured.');
         }
 
         try {

@@ -20,8 +20,8 @@ interface AboutStatsProps {
 export function AboutStats({ happy_customers, accounts_sold }: AboutStatsProps) {
   return (
     <div className="about__content-bottom">
-      <StatCounter value={happy_customers.toLocaleString()} label="Happy Clients" />
-      <StatCounter value={accounts_sold.toLocaleString()} label="Sold Accounts" />
+      <StatCounter value={(happy_customers ?? 0).toLocaleString()} label="Happy Clients" />
+      <StatCounter value={(accounts_sold ?? 0).toLocaleString()} label="Sold Accounts" />
     </div>
   );
 }

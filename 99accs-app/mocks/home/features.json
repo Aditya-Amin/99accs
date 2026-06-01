@@ -1,10 +1,6 @@
 {
   "background_image": "/img/bg/features_bg.png",
-  "heading": {
-    "prefix": "More than ",
-    "user_count": 48345,
-    "suffix": " gamers rely on 99accs for their online gaming needs"
-  },
+  "heading": "More than <span>48,345</span> gamers rely on 99accs for their online gaming needs",
   "items": [
     {
       "id": 1,

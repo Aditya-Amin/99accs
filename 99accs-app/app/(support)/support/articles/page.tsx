@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getSupportArticles } from '@/lib/api/endpoints';
+import { getSupportArticles } from '@/lib/api/server';
 
 export default async function ArticlesPage() {
   const res = await getSupportArticles().catch(() => null);

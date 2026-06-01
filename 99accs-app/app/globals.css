@@ -3924,20 +3924,23 @@ body.tg-modal-open {
   font-size: 17px;
 }
 .shop__description-inner,
-.shop__description-wrap ul {
+.shop__description-wrap ul,
+.shop__description-wrap ol {
   padding-top: 40px;
   margin-top: 40px;
   position: relative;
 }
 @media (max-width: 767.98px) {
   .shop__description-inner,
-  .shop__description-wrap ul {
+  .shop__description-wrap ul,
+  .shop__description-wrap ol {
     padding-top: 25px;
     margin-top: 25px;
   }
 }
 .shop__description-inner::before,
-.shop__description-wrap ul::before {
+.shop__description-wrap ul::before,
+.shop__description-wrap ol::before {
   content: "";
   position: absolute;
   width: 100%;
@@ -3954,22 +3957,29 @@ body.tg-modal-open {
   margin-top: 30px;
 }
 .shop__description-inner .list-wrap li,
-.shop__description-wrap ul li {
+.shop__description-wrap ul li,
+.shop__description-wrap ol li {
   font-size: 17px;
   line-height: 1.65;
+  margin-bottom: 6px;
 }
-.shop__description-inner .list-wrap.inside-list li,
 .shop__description-wrap ul li {
+  list-style: disc;
+  margin-left: 1.5rem;
+}
+.shop__description-wrap ol li {
+  list-style: decimal;
+  margin-left: 1.5rem;
+}
+.shop__description-inner .list-wrap.inside-list li {
   margin-bottom: 6px;
   list-style: disc;
   margin-left: 20px;
 }
-.shop__description-inner .list-wrap.inside-list li:last-child,
-.shop__description-wrap ul li:last-child {
+.shop__description-inner .list-wrap.inside-list li:last-child {
   margin-bottom: 0;
 }
-.shop__description-inner .list-wrap.started-list li,
-.shop__description-wrap ul li {
+.shop__description-inner .list-wrap.started-list li {
   list-style: auto;
   margin-left: 20px;
   margin-bottom: 6px;

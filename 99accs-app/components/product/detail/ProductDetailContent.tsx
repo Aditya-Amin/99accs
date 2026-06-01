@@ -59,13 +59,13 @@ export default function ProductDetailContent({
         {product.country.flag && <img src={product.country.flag} alt="" />}
       </h2>
 
-      {(product.categories.length > 0 || product.last_match_label) && (
+      {((product.categories?.length ?? 0) > 0 || !!product.last_match_label) && (
         <ul className="shop__tag-wrap list-wrap">
-          {product.categories.map((cat) => {
+          {(product.categories ?? []).map((cat) => {
             const Icon = CATEGORY_ICONS[cat.icon];
             return (
               <li key={cat.id}>
-                <Link href={`/shop/${product.game}`}>
+                <Link href={`/product-category/${product.game}`}>
                   {Icon ? <Icon /> : null}
                   {cat.label}
                 </Link>
@@ -74,7 +74,7 @@ export default function ProductDetailContent({
           })}
           {product.last_match_label && (
             <li>
-              <Link href={`/shop/${product.game}`}>
+              <Link href={`/product-category/${product.game}`}>
                 <IconShieldCheck />
                 {product.last_match_label}
               </Link>
@@ -87,13 +87,14 @@ export default function ProductDetailContent({
         <span className="quantity__wrap">🔻 Min. Quantity: {product.min_quantity}</span>
       ) : null}
 
-      <ShopDetailsList shortDescription={product.short_description} />
+      <ShopDetailsList highlights={product.highlights} />
 
       <div className="shop__details-content-bottom">
         <h2 className="price">
           ${product.price.toFixed(2)}
-          {product.price_max ? ` – $${product.price_max.toFixed(2)}` : ''}
-          {product.old_price ? <del>${product.old_price.toFixed(2)}</del> : null}
+          {product.regular_price && product.regular_price > product.price ? (
+            <del>${product.regular_price.toFixed(2)}</del>
+          ) : null}
         </h2>
         {showQty ? (
           <CartQtyAddToCart product={product} minQuantity={product.min_quantity ?? 1} />

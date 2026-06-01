@@ -5,51 +5,69 @@ import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
 import { OAuthSimDialog } from './OAuthSimDialog';
 
-interface LoginSuccess {
-  data: { token: string; user: { id: number; name: string; email: string; created_at: string } };
-}
-interface ForcedReset {
-  must_reset_password: true;
-  reset_token: string;
-  email: string;
-}
-
 export function LoginForm() {
   const params = useSearchParams();
   const redirect = params.get('redirect') || '/account';
-  const setUser = useAuthStore((s) => s.setUser);
+  const login = useAuthStore((s) => s.login);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [legacyNotice, setLegacyNotice] = useState<{ email: string; message: string } | null>(null);
   const [oauthProvider, setOauthProvider] = useState<'google' | 'facebook' | null>(null);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    try {
-      const fd = new FormData(e.currentTarget);
-      const res = await fetch('/api/mock/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
-      });
-      if (!res.ok) throw new Error('Invalid credentials');
-      const json = (await res.json()) as LoginSuccess | ForcedReset;
+    setLegacyNotice(null);
 
-      if ('must_reset_password' in json) {
-        // Server set the reset cookies — hard-navigate to /reset-password.
-        // proxy.ts will hard-block every other URL until this is completed.
-        window.location.assign('/reset-password');
-        return;
-      }
+    const fd = new FormData(e.currentTarget);
+    const result = await login(
+      String(fd.get('email') ?? ''),
+      String(fd.get('password') ?? ''),
+    );
 
-      setUser(json.data.user);
+    if (result.ok) {
       window.location.assign(redirect);
-    } catch {
-      setError('Login failed. Please check your credentials.');
-      setLoading(false);
+      return;
     }
+
+    if (result.legacy) {
+      // Account was migrated from the previous platform. Show the reset notice
+      // inline and keep the user here to read it. They stay a guest (no auth
+      // cookie) and are free to browse anywhere until they open the emailed
+      // link, set a new password, and sign in.
+      setLegacyNotice({ email: result.email, message: result.message });
+      setLoading(false);
+      return;
+    }
+
+    setError(result.message);
+    setLoading(false);
   };
+
+  if (legacyNotice) {
+    return (
+      <div className="auth-form__legacy-notice">
+        <h3 className="title" style={{ marginBottom: 12 }}>Account migrated</h3>
+        <p style={{ marginBottom: 12 }}>{legacyNotice.message}</p>
+        <p style={{ marginBottom: 16, opacity: 0.75 }}>
+          We just emailed a secure password-reset link to{' '}
+          <strong>{legacyNotice.email}</strong>. Open it to finish signing in.
+        </p>
+        <p style={{ marginBottom: 20, fontSize: '0.9em', opacity: 0.7 }}>
+          Didn&apos;t get the email? Check spam, or{' '}
+          <Link href="/forgot-password">request another link</Link>.
+        </p>
+        <button
+          type="button"
+          className="tg-btn"
+          onClick={() => setLegacyNotice(null)}
+        >
+          Back to login
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -72,7 +90,9 @@ export function LoginForm() {
           </div>
         </div>
         {error && <p className="auth-form__error">{error}</p>}
-        <button type="submit" className="tg-btn" disabled={loading}>{loading ? 'Signing in...' : 'Login'}</button>
+        <button type="submit" className="tg-btn" disabled={loading}>
+          {loading ? 'Signing in...' : 'Login'}
+        </button>
       </form>
       <div className="account__switch">
         <p>Don&apos;t have an account? <Link href="/register">Register</Link></p>

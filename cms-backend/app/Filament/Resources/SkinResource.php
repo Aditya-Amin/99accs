@@ -54,7 +54,8 @@ class SkinResource extends Resource
                         ->numeric()
                         ->default(0),
 
-                    \App\Filament\Forms\IconUpload::make('image', 'Icon', 'skin-icons'),
+                    \Awcodes\Curator\Components\Forms\CuratorPicker::make('image')
+                        ->label('Icon'),
 
                     Forms\Components\Textarea::make('description')
                         ->rows(3)
@@ -106,8 +107,16 @@ class SkinResource extends Resource
                     ->native(false),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->tooltip('Edit'),
+                Tables\Actions\DeleteAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->tooltip('Delete'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

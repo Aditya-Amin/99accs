@@ -17,6 +17,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Awcodes\Curator\CuratorPlugin;
 use Filament\Navigation\NavigationGroup;
 
 class AdminPanelProvider extends PanelProvider
@@ -62,6 +63,19 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            // Near-real-time: the bell polls every 10s for new admin alerts.
+            // For instant websocket push, configure Laravel Echo + Reverb and
+            // Filament will broadcast these instead of polling.
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('10s')
+            ->plugin(
+                CuratorPlugin::make()
+                    ->label('Media')
+                    ->pluralLabel('Media')
+                    ->navigationIcon('heroicon-o-photo')
+                    ->navigationGroup('Content')
+                    ->navigationSort(5)
+            )
             // Admin-only stylesheet — overrides for FileUpload previews,
             // ImageColumn thumbnails, etc. Edit public/css/filament-admin.css
             // directly; no build step. `?v=` cache-buster uses APP_VERSION

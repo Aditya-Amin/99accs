@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getSupportArticle } from '@/lib/api/endpoints';
+import { getSupportArticle } from '@/lib/api/server';
 
 interface Props {
   params: Promise<{ slug: string }>;

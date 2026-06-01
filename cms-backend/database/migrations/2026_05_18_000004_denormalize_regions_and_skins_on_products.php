@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -9,6 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         // ── 1. Many-to-many pivot for regions ─────────────────────────────────
+        Schema::dropIfExists('product_region');
         Schema::create('product_region', function (Blueprint $table) {
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('region_id');
@@ -20,33 +22,37 @@ return new class extends Migration
             $table->foreign('region_id')->references('id')->on('regions')->cascadeOnDelete();
         });
 
-        // ── 2. Denormalized JSON columns on products ───────────────────────────
+        // ── 2. Denormalized JSON columns on products (skip if already present) ─
         Schema::table('products', function (Blueprint $table) {
-            // JSON arrays of IDs — written on every pivot change, read on every list query
-            $table->json('region_ids')->nullable()->after('section_id');
-            $table->json('skin_ids')->nullable()->after('region_ids');
+            if (!Schema::hasColumn('products', 'region_ids')) {
+                $table->json('region_ids')->nullable()->after('section_id');
+            }
+            if (!Schema::hasColumn('products', 'skin_ids')) {
+                $table->json('skin_ids')->nullable()->after('region_ids');
+            }
         });
 
-        // ── 3. Backfill product_region pivot from existing region_id FK ────────
-        $rows = DB::table('products')->whereNotNull('region_id')->get(['id', 'region_id']);
-        foreach ($rows as $p) {
-            DB::table('product_region')->insertOrIgnore([
-                'product_id' => $p->id,
-                'region_id'  => $p->region_id,
-            ]);
+        // ── 3 & 4. Backfill pivot + region_ids from old region_id FK ──────────
+        if (Schema::hasColumn('products', 'region_id')) {
+            $rows = DB::table('products')->whereNotNull('region_id')->get(['id', 'region_id']);
+            foreach ($rows as $p) {
+                DB::table('product_region')->insertOrIgnore([
+                    'product_id' => $p->id,
+                    'region_id'  => $p->region_id,
+                ]);
+            }
+
+            DB::table('products')->whereNotNull('region_id')->get(['id'])->each(function ($p) {
+                $ids = DB::table('product_region')
+                    ->where('product_id', $p->id)
+                    ->pluck('region_id')
+                    ->all();
+
+                DB::table('products')
+                    ->where('id', $p->id)
+                    ->update(['region_ids' => json_encode(array_values($ids))]);
+            });
         }
-
-        // ── 4. Backfill products.region_ids from pivot ────────────────────────
-        DB::table('products')->whereNotNull('region_id')->get(['id'])->each(function ($p) {
-            $ids = DB::table('product_region')
-                ->where('product_id', $p->id)
-                ->pluck('region_id')
-                ->all();
-
-            DB::table('products')
-                ->where('id', $p->id)
-                ->update(['region_ids' => json_encode(array_values($ids))]);
-        });
 
         // ── 5. Backfill products.skin_ids from product_skin pivot ─────────────
         DB::table('product_skin')->select('product_id')
@@ -63,11 +69,17 @@ return new class extends Migration
                     ->update(['skin_ids' => json_encode(array_values($ids))]);
             });
 
-        // ── 6. Drop old single-value region FK ────────────────────────────────
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropForeign(['region_id']);
-            $table->dropColumn('region_id');
-        });
+        // ── 6. Drop old single-value region FK (only if column still exists) ──
+        if (Schema::hasColumn('products', 'region_id')) {
+            Schema::table('products', function (Blueprint $table) {
+                try {
+                    $table->dropForeign(['region_id']);
+                } catch (\Throwable $e) {
+                    // FK may already be gone
+                }
+                $table->dropColumn('region_id');
+            });
+        }
     }
 
     public function down(): void

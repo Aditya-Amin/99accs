@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { FilterDropdown } from '@/components/ui/FilterDropdown';
+import type { Order } from '@/lib/api/types';
 
 function SearchIcon() {
   return (
@@ -18,33 +19,44 @@ function PrinterIcon() {
   );
 }
 
-const FILTER_OPTIONS = [
-  { id: 'filter-completed', label: 'Completed' },
-  { id: 'filter-cancelled', label: 'Canceled' },
-  { id: 'filter-in-progress', label: 'In Progress' },
-];
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-interface TxRow {
-  id: string;
-  orderId: string;
-  amount: string;
-  description: string;
-  status: string;
-  statusClass: string;
-  date: string;
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-const TRANSACTIONS: TxRow[] = [
-  { id: '#15941', orderId: '#15941', amount: '$220', description: 'Payment for order #15941', status: 'Completed', statusClass: 'open', date: 'Nov 14, 2023' },
-  { id: '#15942', orderId: '#15942', amount: '$300', description: 'Payment for order #15942', status: 'In Progress', statusClass: 'country__code ap', date: 'Nov 18, 2023' },
-  { id: '#15943', orderId: '#15943', amount: '$120', description: 'Payment for order #15943', status: 'Completed', statusClass: 'open', date: 'Dec 2, 2023' },
-  { id: '#15944', orderId: '#15944', amount: '$450', description: 'Payment for order #15944', status: 'Canceled', statusClass: 'closed', date: 'Dec 10, 2023' },
-  { id: '#15945', orderId: '#15945', amount: '$20', description: 'Payment for order #15945', status: 'Completed', statusClass: 'open', date: 'Dec 20, 2023' },
-  { id: '#15946', orderId: '#15946', amount: '$202', description: 'Payment for order #15946', status: 'Canceled', statusClass: 'closed', date: 'Jan 5, 2024' },
+function fmtPrice(n: number) {
+  return `$${n.toFixed(2)}`;
+}
+
+// Map order status → display label + CSS class (reuse account table colour scheme)
+type TxStatus = 'Completed' | 'In Progress' | 'Pending' | 'Cancelled';
+
+function txStatus(s: Order['status']): { label: TxStatus; cssClass: string } {
+  switch (s) {
+    case 'completed':  return { label: 'Completed',   cssClass: 'open' };
+    case 'cancelled':  return { label: 'Cancelled',   cssClass: 'closed' };
+    case 'processing': return { label: 'In Progress', cssClass: 'country__code ap' };
+    default:           return { label: 'Pending',     cssClass: 'country__code ap' };
+  }
+}
+
+const FILTER_OPTIONS = [
+  { id: 'filter-completed',   label: 'Completed' },
+  { id: 'filter-in-progress', label: 'In Progress' },
+  { id: 'filter-pending',     label: 'Pending' },
+  { id: 'filter-cancelled',   label: 'Cancelled' },
 ];
 
-export function TransactionHistoryPane() {
+// ── Main component ────────────────────────────────────────────────────────────
+
+interface Props {
+  initialOrders: Order[];
+}
+
+export function TransactionHistoryPane({ initialOrders }: Props) {
   const [checkedFilters, setCheckedFilters] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
 
   const toggleFilter = (label: string) => {
     setCheckedFilters((prev) =>
@@ -52,18 +64,38 @@ export function TransactionHistoryPane() {
     );
   };
 
-  const displayedRows =
-    checkedFilters.length === 0
-      ? TRANSACTIONS
-      : TRANSACTIONS.filter((r) => checkedFilters.includes(r.status));
+  const rows = initialOrders
+    .filter((o) => {
+      if (checkedFilters.length === 0) return true;
+      return checkedFilters.includes(txStatus(o.status).label);
+    })
+    .filter((o) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        (o.number ?? String(o.id)).toLowerCase().includes(q) ||
+        o.items.some((i) => i.product_title.toLowerCase().includes(q))
+      );
+    });
+
+  // Total of completed orders only = lifetime balance paid
+  const totalPaid = initialOrders
+    .filter((o) => o.status === 'completed')
+    .reduce((acc, o) => acc + o.total, 0);
 
   return (
     <div className="support__table-wrap-two account-pane active">
       <div className="support__table-top">
-        <form action="#" className="support__table-form">
+        <form action="#" className="support__table-form" onSubmit={(e) => e.preventDefault()}>
           <div className="form-grp">
             <label htmlFor="tx-search"><SearchIcon /></label>
-            <input type="text" id="tx-search" placeholder="Search..." />
+            <input
+              type="text"
+              id="tx-search"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
           <FilterDropdown
             options={FILTER_OPTIONS}
@@ -71,42 +103,54 @@ export function TransactionHistoryPane() {
             onChange={toggleFilter}
           />
         </form>
-        <button type="button" className="tg-btn">
+        <button type="button" className="tg-btn" onClick={() => window.print()}>
           <PrinterIcon />
           Show printable view
         </button>
       </div>
       <h2 className="balance-title">
-        Your current balance is: <span>$0.00</span>
+        Your total spend: <span>{fmtPrice(totalPaid)}</span>
       </h2>
       <div className="support__table-tab">
-        <div className="table-pane active">
-          <table className="support__table-inner">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Order ID</th>
-                <th>Amount</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedRows.map((row, i) => (
-                <tr key={i}>
-                  <td className="product__id">{row.id}</td>
-                  <td className="product__id">{row.orderId}</td>
-                  <td className="product__price"><span>{row.amount}</span></td>
-                  <td className="product__description"><p>{row.description}</p></td>
-                  <td className="product__status">
-                    <span className={row.statusClass}>{row.status}</span>
-                  </td>
-                  <td className="product__date"><span>{row.date}</span></td>
+        <div className="table-pane active" style={{ display: 'block' }}>
+          {rows.length === 0 ? (
+            <p style={{ color: 'rgba(255,255,255,0.4)', padding: '24px', textAlign: 'center' }}>
+              No transactions found.
+            </p>
+          ) : (
+            <table className="support__table-inner">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Order ID</th>
+                  <th>Amount</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th>Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((order) => {
+                  const { label, cssClass } = txStatus(order.status);
+                  const orderId = order.number ?? `#${order.id}`;
+                  return (
+                    <tr key={order.id}>
+                      <td className="product__id">{orderId}</td>
+                      <td className="product__id">{orderId}</td>
+                      <td className="product__price"><span>{fmtPrice(order.total)}</span></td>
+                      <td className="product__description">
+                        <p>Payment for order {orderId}</p>
+                      </td>
+                      <td className="product__status">
+                        <span className={cssClass}>{label}</span>
+                      </td>
+                      <td className="product__date"><span>{fmtDate(order.created_at)}</span></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

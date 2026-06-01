@@ -3,55 +3,76 @@ import { useState, FormEvent } from 'react';
 import { useUiStore } from '@/lib/store/uiStore';
 import { useAuthStore } from '@/lib/store/authStore';
 
-interface LoginSuccess {
-  data: { token: string; user: { id: number; name: string; email: string; created_at: string } };
-}
-interface ForcedReset {
-  must_reset_password: true;
-  reset_token: string;
-  email: string;
-}
-
 export function LoginPane() {
   const { openAuthModal, closeAuthModal, authPostLoginRedirect, clearAuthPostLoginRedirect } = useUiStore();
-  const setUser = useAuthStore((s) => s.setUser);
+  // Use the real auth store → /api/auth/login BFF → Laravel Hash::check + a real
+  // Sanctum token cookie. (The old mock route accepted ANY password and minted a
+  // random user, which also broke the header name + authed checkout.)
+  const login = useAuthStore((s) => s.login);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [legacyNotice, setLegacyNotice] = useState<{ email: string; message: string } | null>(null);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    try {
-      const fd = new FormData(e.currentTarget);
-      const email = String(fd.get('email') ?? '');
-      const res = await fetch('/api/mock/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: fd.get('password') }),
-      });
-      if (!res.ok) throw new Error('Invalid credentials');
-      const json = (await res.json()) as LoginSuccess | ForcedReset;
+    setLegacyNotice(null);
 
-      if ('must_reset_password' in json) {
-        // Server set the reset cookies. Hard-navigate so proxy.ts picks them up
-        // and locks us into /reset-password until the reset is complete.
-        closeAuthModal();
-        window.location.assign('/reset-password');
-        return;
-      }
+    const fd = new FormData(e.currentTarget);
+    const result = await login(
+      String(fd.get('email') ?? ''),
+      String(fd.get('password') ?? ''),
+    );
 
-      setUser(json.data.user);
+    if (result.ok) {
+      // Store already holds the real user → header re-renders with the correct
+      // name. Close the modal and honor any pending post-login redirect.
       const redirect = authPostLoginRedirect;
       clearAuthPostLoginRedirect();
       closeAuthModal();
       if (redirect) window.location.assign(redirect);
-    } catch {
-      setError('Login failed. Please check your credentials.');
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    if (result.legacy) {
+      // Migrated account — show the reset notice inline. The user is NOT logged
+      // in and NOT trapped: they can close this modal and keep browsing as a
+      // guest until they open the emailed link and set a new password.
+      setLegacyNotice({ email: result.email, message: result.message });
+      setLoading(false);
+      return;
+    }
+
+    setError(result.message);
+    setLoading(false);
   };
+
+  if (legacyNotice) {
+    return (
+      <div className="auth-form__legacy-notice">
+        <h3 className="title" style={{ marginBottom: 12 }}>Password reset required</h3>
+        <p style={{ marginBottom: 12 }}>{legacyNotice.message}</p>
+        <p style={{ marginBottom: 16, opacity: 0.75 }}>
+          We just emailed a secure password-reset link to{' '}
+          <strong>{legacyNotice.email}</strong>. Open it to set a new password and finish signing in.
+        </p>
+        <p style={{ marginBottom: 20, fontSize: '0.9em', opacity: 0.7 }}>
+          You can close this and keep browsing as a guest in the meantime.
+        </p>
+        <button type="button" className="tg-btn" style={{ marginRight: 8 }} onClick={() => openAuthModal('forgot-password')}>
+          Resend reset link
+        </button>
+        <button
+          type="button"
+          onClick={() => setLegacyNotice(null)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', textDecoration: 'underline', padding: 0 }}
+        >
+          Back to login
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>

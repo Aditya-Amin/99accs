@@ -8,7 +8,10 @@ export class ApiError extends Error {
   }
 }
 
-const TIMEOUT_MS = 5000;
+// Dev uses a single-threaded `php artisan serve` (one PHP worker, requests
+// serialize), so concurrent SSR + route prefetches queue up and a 5s budget is
+// easily blown. Give dev generous headroom; keep prod strict.
+const TIMEOUT_MS = process.env.NODE_ENV === 'production' ? 5000 : 20000;
 
 export async function api<T>(
   path: string,

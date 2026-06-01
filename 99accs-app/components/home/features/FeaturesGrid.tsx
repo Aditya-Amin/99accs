@@ -6,8 +6,8 @@ export function FeaturesGrid({ items }: { items: FeatureItem[] }) {
   return (
     <div className="features__item-wrap">
       <div className="row">
-        {items.map((feature) => (
-          <div key={feature.id} className="col-md-6">
+        {items.map((feature, index) => (
+          <div key={feature.id != null ? `feature-${feature.id}` : index} className="col-md-6">
             <FeatureItemCard title={feature.title} icon={feature.icon} text={feature.text} />
           </div>
         ))}

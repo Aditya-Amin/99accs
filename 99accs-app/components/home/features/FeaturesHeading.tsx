@@ -1,13 +1,9 @@
-import type { FeaturesHeading as FeaturesHeadingType } from '@/lib/api/types';
-
 // --- Left column heading for features section ---
-export function FeaturesHeading({ heading }: { heading: FeaturesHeadingType }) {
+export function FeaturesHeading({ heading }: { heading: string }) {
   return (
     <div className="features__content-wrap">
       <div className="section__title">
-        <h2 className="title">
-          {heading.prefix}<span>{heading.user_count.toLocaleString()}</span>{heading.suffix}
-        </h2>
+        <h2 className="title" dangerouslySetInnerHTML={{ __html: heading }} />
       </div>
     </div>
   );

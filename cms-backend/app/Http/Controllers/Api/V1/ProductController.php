@@ -11,16 +11,17 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // region_id and section_id are simple FKs — resolved via eager loads.
-    // skin_ids stays denormalized JSON for fast multi-value filtering.
+    // Explicit column list for list queries; keeps eager loads lean.
+    // region_ids is the denormalized JSON; the full region records come via eager load.
     private const LIST_COLUMNS = [
-        'id', 'slug', 'game_id', 'account_type_id', 'section_id', 'region_id',
-        'name', 'price', 'price_max', 'compare_at_price',
+        'id', 'slug', 'game_id', 'account_type_id', 'section_id',
+        'region_ids',
+        'name', 'price', 'regular_price',
         'feature_badges', 'images', 'has_gallery',
-        'discount_percent', 'badge_icon',
+        'badge_icon',
         'rank',
         'agents', 'skins', 'buddies',
-        'description', 'specs',
+        'description', 'highlights', 'specs',
         'stock_qty', 'min_quantity', 'created_at',
         'skin_ids',
     ];
@@ -32,7 +33,7 @@ class ProductController extends Controller
     {
         $query = Product::query()
             ->select(self::LIST_COLUMNS)
-            ->with(['game', 'accountType', 'section', 'region'])
+            ->with(['game', 'accountType', 'section', 'regions'])
             ->where('is_visible', true);
 
         if ($request->filled('game')) {
@@ -47,9 +48,8 @@ class ProductController extends Controller
             $query->whereHas('section', fn ($q) => $q->where('slug', $request->string('section')));
         }
 
-        // Region filter — single FK, fast index lookup
         if ($request->filled('region')) {
-            $query->whereHas('region', fn ($q) => $q->where('slug', $request->string('region')));
+            $query->whereHas('regions', fn ($q) => $q->where('slug', $request->string('region')));
         }
 
         // Skin filter — single-table JSON_CONTAINS, uses multi-value index
@@ -60,7 +60,7 @@ class ProductController extends Controller
 
         // Country badge filter — matches region.code (NA, EU, AP, EUW, LAS, TR…)
         if ($request->filled('country')) {
-            $query->whereHas('region', fn ($q) =>
+            $query->whereHas('regions', fn ($q) =>
                 $q->where('code', strtoupper($request->string('country')->toString()))
             );
         }
@@ -98,12 +98,12 @@ class ProductController extends Controller
     {
         $product = Product::where('slug', $slug)
             ->where('is_visible', true)
-            ->with(['game', 'accountType', 'section', 'region'])
+            ->with(['game', 'accountType', 'section', 'regions'])
             ->firstOrFail();
 
         $related = Product::query()
             ->select(self::LIST_COLUMNS)
-            ->with(['game', 'accountType', 'section', 'region'])
+            ->with(['game', 'accountType', 'section', 'regions'])
             ->where('is_visible', true)
             ->where('game_id', $product->game_id)
             ->where('id', '!=', $product->id)

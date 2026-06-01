@@ -4,7 +4,7 @@ import WorkSection from '@/components/home/WorkSection';
 import FeaturesSection from '@/components/home/FeaturesSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import CtaSection from '@/components/home/CtaSection';
-import { getHome } from '@/lib/api/endpoints';
+import { getHome } from '@/lib/api/server';
 
 export const dynamic = 'force-dynamic';
 

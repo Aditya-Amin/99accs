@@ -13,15 +13,21 @@ export function ForgotPasswordForm() {
     setError('');
     try {
       const fd = new FormData(e.currentTarget);
-      const res = await fetch('/api/mock/forgot-password', {
+      const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: fd.get('email') }),
       });
-      if (!res.ok) throw new Error('Failed');
+      // The backend deliberately returns 200 for both "sent" and "no such
+      // account" to avoid email enumeration. Only true network/server errors
+      // surface here.
+      if (!res.ok && res.status !== 200) {
+        const body = (await res.json().catch(() => ({}))) as { message?: string };
+        throw new Error(body.message ?? 'Could not send reset link.');
+      }
       setSent(true);
-    } catch {
-      setError('Could not send reset link. Try again.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send reset link. Try again.');
     } finally {
       setLoading(false);
     }
@@ -31,6 +37,9 @@ export function ForgotPasswordForm() {
     return (
       <>
         <p>If an account exists for that email, a reset link is on its way.</p>
+        <p style={{ marginTop: 8, fontSize: '0.9em', opacity: 0.7 }}>
+          The link expires in 60 minutes.
+        </p>
         <div className="account__switch">
           <p><Link href="/login">Back to login</Link></p>
         </div>

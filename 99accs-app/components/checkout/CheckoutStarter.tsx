@@ -3,81 +3,148 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/lib/store/cartStore';
+import { useAuthStore } from '@/lib/store/authStore';
+import { GuestContactForm, type GuestContact } from './GuestContactForm';
+import { CartOrderSummary } from './CartOrderSummary';
 
-// One-shot bootstrap: posts the cart to /api/mock/checkout, then redirects to
-// /checkout/{id}. Rendered by /checkout (the no-id route) so cart users can
-// keep linking to "/checkout" without knowing about session ids.
+interface CheckoutSuccess {
+  data: {
+    id: string;
+    order_number: string;
+    is_guest_checkout: boolean;
+    customer_email: string;
+  };
+}
+
+interface CheckoutError {
+  code?: string;
+  message?: string;
+  email?: string;
+}
+
 export function CheckoutStarter() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
+  const clearCart = useCartStore((s) => s.clearCart);
+  const authStatus = useAuthStore((s) => s.status);
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const startedRef = useRef(false);
+  const [emailRequiresLogin, setEmailRequiresLogin] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (startedRef.current) return;
-    if (items.length === 0) return; // empty-cart branch renders below
-    startedRef.current = true;
+  const authedStartedRef = useRef(false);
 
-    (async () => {
-      try {
-        const res = await fetch('/api/mock/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            currency: 'USD',
-            items: items.map((i) => ({
-              id: i.product.id,
-              title: i.product.title,
-              image: i.product.images?.[0] ?? null,
-              unit_price_cents: Math.round(i.product.price * 100),
-              quantity: i.quantity,
-              category: i.product.account_type,
-              delivery_type: 'instant',
-              warranty_days: 14,
-              attributes: {
-                region: i.product.country?.code ?? '',
-              },
-            })),
-          }),
-        });
+  const startCheckout = async (contact?: GuestContact) => {
+    setLoading(true);
+    setError(null);
+    setEmailRequiresLogin(null);
 
-        if (res.status === 401) {
-          router.replace('/login');
-          return;
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          items: items.map((i) => ({
+            product_id: i.product.id,
+            quantity: i.quantity,
+          })),
+          ...(contact ?? {}),
+        }),
+      });
+
+      const json = (await res.json().catch(() => ({}))) as CheckoutSuccess | CheckoutError;
+
+      if (!res.ok) {
+        const err = json as CheckoutError;
+        if (err.code === 'EMAIL_REQUIRES_LOGIN' && err.email) {
+          setEmailRequiresLogin(err.email);
+        } else {
+          setError(err.message ?? 'Could not start checkout.');
         }
-        if (!res.ok) {
-          const body = (await res.json().catch(() => ({}))) as { message?: string };
-          throw new Error(body.message ?? `Failed (${res.status})`);
-        }
-        const { session } = (await res.json()) as { session: { id: string } };
-        router.replace(`/checkout/${session.id}`);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Could not start checkout.');
-        startedRef.current = false;
+        setLoading(false);
+        return;
       }
-    })();
-  }, [items, router]);
+
+      const success = (json as CheckoutSuccess).data;
+      clearCart();
+
+      // Everyone — guest or authed — goes to the payment page to pick a gateway
+      // and pay. /checkout/[id] is gated by the checkout_token UUID (not auth),
+      // so guests can reach it too; the order confirmation (/order/[id]/received)
+      // is reached only AFTER payment succeeds.
+      router.replace(`/checkout/${success.id}`);
+    } catch {
+      setError('Could not reach the checkout service. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  // Authed-user fast path: post once on first render.
+  useEffect(() => {
+    if (authStatus !== 'authed') return;
+    if (items.length === 0) return;
+    if (authedStartedRef.current) return;
+    authedStartedRef.current = true;
+    void startCheckout();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authStatus, items.length]);
+
+  // ─── Render branches ─────────────────────────────────────────────────────
 
   if (items.length === 0) {
     return (
       <div className="text-center" style={{ padding: '60px 0' }}>
         <p style={{ marginBottom: 16, opacity: 0.7 }}>Your cart is empty.</p>
-        <Link href="/shop/valorant" className="tg-btn">Browse shop</Link>
+        <Link href="/product-category/valorant" className="tg-btn">Browse shop</Link>
       </div>
     );
   }
 
+  // Authed bootstrap is in-flight, or we're waiting for /api/auth/me to resolve.
+  if (authStatus === 'authed' || authStatus === 'unknown') {
+    return (
+      <div className="text-center" style={{ padding: '60px 0' }}>
+        {error ? (
+          <>
+            <p style={{ color: '#f87171', marginBottom: 16 }}>{error}</p>
+            <Link href="/cart" className="tg-btn">Back to cart</Link>
+          </>
+        ) : (
+          <p style={{ opacity: 0.7 }}>Preparing your checkout…</p>
+        )}
+      </div>
+    );
+  }
+
+  // Guest path — show the contact form alongside the order summary.
   return (
-    <div className="text-center" style={{ padding: '60px 0' }}>
-      {error ? (
-        <>
-          <p style={{ color: '#f87171', marginBottom: 16 }}>{error}</p>
-          <Link href="/cart" className="tg-btn">Back to cart</Link>
-        </>
-      ) : (
-        <p style={{ opacity: 0.7 }}>Preparing your checkout…</p>
-      )}
+    <div className="row">
+      <div className="col-lg-7">
+        <GuestContactForm
+          loading={loading}
+          error={emailRequiresLogin
+            ? `An account already exists for ${emailRequiresLogin}.`
+            : error
+          }
+          onSubmit={(contact) => void startCheckout(contact)}
+        />
+        {emailRequiresLogin && (
+          <p style={{ marginTop: 16, fontSize: '0.95em' }}>
+            <Link
+              href={`/login?redirect=${encodeURIComponent('/checkout')}`}
+              className="tg-btn"
+              style={{ display: 'inline-block' }}
+            >
+              Sign in to continue
+            </Link>
+          </p>
+        )}
+      </div>
+
+      <div className="col-lg-5">
+        <CartOrderSummary items={items} />
+      </div>
     </div>
   );
 }

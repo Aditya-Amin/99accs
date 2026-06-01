@@ -3,15 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrderResource\Pages;
-use App\Filament\Resources\OrderResource\RelationManagers;
 use App\Models\Order;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class OrderResource extends Resource
 {
@@ -30,7 +27,16 @@ Forms\Components\Group::make()->schema([
                         ->schema([
                             Forms\Components\Select::make('customer_id')
                                 ->relationship('customer', 'email')
-                                ->required(),
+                                ->required()
+                                ->hiddenOn('edit'),
+                            Forms\Components\TextInput::make('customer_email')
+                                ->label('Customer')
+                                ->afterStateHydrated(fn (Forms\Components\TextInput $component, $record) =>
+                                    $component->state($record?->customer?->email ?? '')
+                                )
+                                ->readOnly()
+                                ->dehydrated(false)
+                                ->visibleOn('edit'),
                             Forms\Components\TextInput::make('number')
                                 ->required()
                                 ->default('ORD-' . random_int(10000, 99999))
@@ -68,7 +74,7 @@ Forms\Components\Group::make()->schema([
                                         ->relationship('product', 'name')
                                         ->required()
                                         ->reactive()
-                                        ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
+                                        ->afterStateUpdated(function ($state, Forms\Set $set) {
                                             $product = \App\Models\Product::find($state);
                                             if ($product) {
                                                 $set('price_snapshot', $product->price);
@@ -167,33 +173,79 @@ Forms\Components\Group::make()->schema([
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('customer_id')
-                    ->numeric()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('number')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('status'),
-                Tables\Columns\TextColumn::make('total_price')
-                    ->numeric()
+                    ->label('Order #')
+                    ->badge()
+                    ->color('gray')
+                    ->searchable()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('customer.email')
+                    ->label('Customer')
+                    ->searchable()
+                    ->sortable()
+                    ->weight(\Filament\Support\Enums\FontWeight::Medium),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'completed'  => 'success',
+                        'processing' => 'warning',
+                        'cancelled'  => 'danger',
+                        default      => 'gray',
+                    })
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('payment_status')
-                    ->searchable(),
+                    ->label('Payment')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'paid'    => 'success',
+                        'failed'  => 'danger',
+                        default   => 'warning',
+                    })
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('total_price')
+                    ->label('Total')
+                    ->money('USD')
+                    ->sortable()
+                    ->weight(\Filament\Support\Enums\FontWeight::SemiBold),
+
                 Tables\Columns\TextColumn::make('payment_method')
-                    ->searchable(),
+                    ->label('Method')
+                    ->badge()
+                    ->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Date')
+                    ->dateTime('M j, Y')
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'pending'    => 'Pending',
+                        'processing' => 'Processing',
+                        'completed'  => 'Completed',
+                        'cancelled'  => 'Cancelled',
+                    ]),
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->label('Payment')
+                    ->options([
+                        'pending' => 'Pending',
+                        'paid'    => 'Paid',
+                        'failed'  => 'Failed',
+                    ]),
             ])
+            ->defaultSort('created_at', 'desc')
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->iconButton()
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->tooltip('Edit'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

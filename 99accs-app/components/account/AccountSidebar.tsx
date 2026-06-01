@@ -1,9 +1,15 @@
 'use client';
 import Link from 'next/link';
+import { useAuthStore } from '@/lib/store/authStore';
 
 export default function AccountSidebar() {
+  const logout = useAuthStore((s) => s.logout);
+
   const handleLogout = async () => {
-    await fetch('/api/mock/logout', { method: 'POST' });
+    // Real logout: /api/auth/logout revokes the Sanctum token in the backend
+    // DB AND clears every auth cookie (token + user snapshot). The old
+    // /api/mock/logout left the real server-side token alive.
+    await logout();
     window.location.href = '/';
   };
 

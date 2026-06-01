@@ -41,7 +41,7 @@ export default function Header() {
                       </li>
                       <li>
                         <div className="dropdown">
-                          <Link href="/shop/fortnite" className="dropdown-toggle-two">
+                          <Link href="/product-category/fortnite" className="dropdown-toggle-two">
                             <img src="/img/icons/header_cat02.svg" alt="icon" />
                             Fortnite
                           </Link>
@@ -49,7 +49,7 @@ export default function Header() {
                       </li>
                       <li>
                         <div className="dropdown">
-                          <Link href="/shop/legends" className="dropdown-toggle-two">
+                          <Link href="/product-category/legends" className="dropdown-toggle-two">
                             <img src="/img/icons/header_cat03.svg" alt="icon" />
                             League Of Legends
                           </Link>
@@ -119,7 +119,7 @@ function ValorantCategoryDropdown() {
       }
       items={VALORANT_REGIONS.map((r) => ({
         kind: 'link' as const,
-        href: `/shop/valorant?region=${r.slug}`,
+        href: `/product-category/valorant?region=${r.slug}`,
         label: r.label,
         key: r.slug,
       }))}
@@ -152,9 +152,9 @@ function MobileMenu() {
           </div>
           <div className="tgmobile__menu-outer">
             <ul className="navigation">
-              <li><Link href="/shop/valorant" onClick={closeMobileMenu}>Valorant</Link></li>
-              <li><Link href="/shop/fortnite" onClick={closeMobileMenu}>Fortnite</Link></li>
-              <li><Link href="/shop/legends" onClick={closeMobileMenu}>League of Legends</Link></li>
+              <li><Link href="/product-category/valorant" onClick={closeMobileMenu}>Valorant</Link></li>
+              <li><Link href="/product-category/fortnite" onClick={closeMobileMenu}>Fortnite</Link></li>
+              <li><Link href="/product-category/legends" onClick={closeMobileMenu}>League of Legends</Link></li>
               {authStatus === 'authed' && (
                 <>
                   <li><Link href="/account" onClick={closeMobileMenu}>Dashboard</Link></li>
