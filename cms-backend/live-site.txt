@@ -6,6 +6,11 @@ pass: @99accs@2026!
 user: tonystark
 pass: @tonystark@2026!
 
+--------------- DB ------------
+DB Name: sql99accsdb
+DB User: sql99accsdb
+DB Pass: @99accs_db@2026!
+
 server {
   listen 80;
   listen [::]:80;
