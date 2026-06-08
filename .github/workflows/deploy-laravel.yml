@@ -24,13 +24,13 @@ jobs:
             git pull origin main
 
             cd cms-backend
-            composer install --no-dev --optimize-autoloader
-            php artisan migrate --force
-            php artisan optimize:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan filament:assets
+            php8.1 /usr/local/bin/composer install --no-dev --optimize-autoloader
+            php8.1 artisan migrate --force
+            php8.1 artisan optimize:clear
+            php8.1 artisan config:cache
+            php8.1 artisan route:cache
+            php8.1 artisan view:cache
+            php8.1 artisan filament:assets
 
             sudo supervisorctl restart 99accs-worker:*
             echo "Laravel deployed OK"
