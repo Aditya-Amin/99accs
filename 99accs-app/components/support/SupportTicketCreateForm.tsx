@@ -45,7 +45,7 @@ export default function SupportTicketCreateForm() {
     setLoading(true);
     try {
       const fd = new FormData(e.currentTarget);
-      const res = await fetch('/api/mock/support/tickets', {
+      const res = await fetch('/api/support/tickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

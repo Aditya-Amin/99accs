@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\PageController;
 use App\Http\Controllers\Api\V1\PasswordResetController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\SupportController;
+use App\Http\Controllers\Api\V1\SupportTicketController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -88,6 +89,13 @@ Route::prefix('v1')->group(function () {
         Route::patch('/cart/{item_id}',  [CartController::class, 'update']);
         Route::delete('/cart/{item_id}', [CartController::class, 'remove']);
         Route::delete('/cart',           [CartController::class, 'clear']);
+
+        // Support tickets (customer-scoped)
+        Route::get('/support/tickets',                [SupportTicketController::class, 'index']);
+        Route::post('/support/tickets',               [SupportTicketController::class, 'store']);
+        Route::get('/support/tickets/{id}',           [SupportTicketController::class, 'show']);
+        Route::patch('/support/tickets/{id}',         [SupportTicketController::class, 'update']);
+        Route::post('/support/tickets/{id}/replies',  [SupportTicketController::class, 'storeReply']);
     });
 
     // ── Checkout (guest-friendly) ─────────────────────────────────────────────

@@ -1,16 +1,17 @@
-import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { SupportBreadcrumb } from '@/components/support/SupportBreadcrumb';
 import SupportTicketThread from '@/components/support/SupportTicketThread';
-import { getMockTicket } from '@/lib/mock/support';
+import { readToken } from '@/lib/auth/cookies';
+import { getSupportTicket } from '@/lib/api/endpoints';
+import type { SupportTicket } from '@/lib/api/types';
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
 export default async function SupportTicketDetailPage({ params }: Props) {
-  const store = await cookies();
-  if (!store.has('99accs_token')) {
+  const token = await readToken();
+  if (!token) {
     redirect('/support');
   }
 
@@ -18,7 +19,13 @@ export default async function SupportTicketDetailPage({ params }: Props) {
   const ticketId = parseInt(id, 10);
   if (Number.isNaN(ticketId)) notFound();
 
-  const ticket = getMockTicket(ticketId);
+  let ticket: SupportTicket | null = null;
+  try {
+    const res = await getSupportTicket(token, ticketId);
+    ticket = res.data;
+  } catch {
+    // 404 (not found / not owned) or API unreachable — both render notFound().
+  }
   if (!ticket) notFound();
 
   return (

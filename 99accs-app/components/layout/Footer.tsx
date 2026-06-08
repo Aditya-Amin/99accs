@@ -11,14 +11,14 @@ import type {
 
 // ── Icon maps ─────────────────────────────────────────────────────────────────
 
-const SOCIAL_ICON_MAP: Record<FooterSocialPlatform, () => React.ReactElement> = {
+const SOCIAL_ICON_MAP: Record<FooterSocialPlatform, React.ComponentType> = {
   discord:   IconDiscord,
   telegram:  IconTelegram,
   facebook:  IconFacebook,
   instagram: IconInstagram,
 };
 
-const QUICK_LINK_ICON_MAP: Record<FooterQuickLinkIcon, () => React.ReactElement> = {
+const QUICK_LINK_ICON_MAP: Record<FooterQuickLinkIcon, React.ComponentType> = {
   submit_ticket:    IconSubmitTicket,
   account_email:    IconEmail,
   support_articles: IconSupportArticles,

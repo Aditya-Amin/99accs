@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\ResetPasswordNotification;
+use App\Notifications\TicketReplyNotification;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -58,6 +59,11 @@ class Customer extends Authenticatable implements CanResetPasswordContract
         return $this->hasMany(Order::class);
     }
 
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
     public function cart()
     {
         return $this->hasOne(Cart::class);
@@ -71,6 +77,11 @@ class Customer extends Authenticatable implements CanResetPasswordContract
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordNotification($token));
+    }
+
+    public function sendTicketReplyNotification(SupportTicket $ticket, string $replyExcerpt, bool $wasClosed = false): void
+    {
+        $this->notify(new TicketReplyNotification($ticket, $replyExcerpt, $wasClosed));
     }
 
     public function markPasswordReset(): void

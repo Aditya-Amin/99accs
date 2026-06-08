@@ -1,10 +1,9 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SupportBreadcrumb } from '@/components/support/SupportBreadcrumb';
 import SupportTicketsTable from '@/components/support/SupportTicketsTable';
-import { getMockTickets } from '@/lib/mock/support';
-import type { SupportTicketStatus, Game } from '@/lib/api/types';
-// TODO: swap getMockTickets() → getSupportTickets() once Laravel API is live
+import { readToken } from '@/lib/auth/cookies';
+import { getSupportTickets } from '@/lib/api/endpoints';
+import type { SupportTicket, SupportTicketStatus, Game } from '@/lib/api/types';
 
 interface Props {
   searchParams: Promise<Record<string, string>>;
@@ -14,8 +13,8 @@ interface Props {
 // hitting this URL is bounced back to /support so the portal CTA can prompt
 // login. The status/game/search params are reflected in the table filter UI.
 export default async function SupportTicketsPage({ searchParams }: Props) {
-  const store = await cookies();
-  if (!store.has('99accs_token')) {
+  const token = await readToken();
+  if (!token) {
     redirect('/support');
   }
 
@@ -27,7 +26,13 @@ export default async function SupportTicketsPage({ searchParams }: Props) {
     ? (sp.game as Game)
     : undefined;
 
-  const tickets = getMockTickets({ status, game, search: sp.search });
+  let tickets: SupportTicket[] = [];
+  try {
+    const res = await getSupportTickets(token, { status, game, search: sp.search, per_page: 50 });
+    tickets = res.data;
+  } catch {
+    // API unreachable — render empty state rather than erroring the page.
+  }
 
   return (
     <main className="main-area fix">
