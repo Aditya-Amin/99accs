@@ -20,6 +20,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
             cd /home/user99accs/htdocs/backup.99accs.com
             git pull origin main
 
