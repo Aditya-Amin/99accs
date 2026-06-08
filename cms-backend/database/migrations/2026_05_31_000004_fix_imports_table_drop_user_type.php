@@ -11,13 +11,15 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasColumn('imports', 'user_type')) {
+            return;
+        }
+
         Schema::table('imports', function (Blueprint $table) {
-            // morphs() created index on (user_type, user_id) — drop it first
             $table->dropIndex(['user_type', 'user_id']);
             $table->dropColumn('user_type');
         });
 
-        // Add foreign key constraint that the morphs() shorthand skipped
         Schema::table('imports', function (Blueprint $table) {
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
