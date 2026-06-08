@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Region;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -49,8 +50,10 @@ class Product extends Model implements HasMedia
         'images', 'featured_image_id', 'gallery_ids',
         // Taxonomy FKs
         'game_id', 'account_type_id', 'section_id',
+        // Taxonomy FK
+        'region_id',
         // Denormalized M:N columns (synced from pivots)
-        'region_ids', 'skin_ids',
+        'skin_ids',
         'rank', 'has_gallery',
         'agents', 'skins', 'buddies', 'specs', 'feature_badges',
         // Detail-only (populated by game API import)
@@ -92,7 +95,6 @@ class Product extends Model implements HasMedia
         'regular_price'      => 'decimal:2',
         'synced_at'          => 'datetime',
         'skin_ids'           => 'array',
-        'region_ids'         => 'array',
         'gallery_ids'        => 'array',
         'legacy_categories'  => 'array',
         'is_cornerstone'     => 'boolean',
@@ -115,10 +117,9 @@ class Product extends Model implements HasMedia
         return $this->belongsTo(Section::class);
     }
 
-    // M:N — source of truth for region assignments (migrated from region_id FK).
-    public function regions(): BelongsToMany
+    public function region(): BelongsTo
     {
-        return $this->belongsToMany(Region::class, 'product_region');
+        return $this->belongsTo(Region::class);
     }
 
     // M:N — source of truth for skin taxonomy assignments (write path)

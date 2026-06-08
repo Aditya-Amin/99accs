@@ -438,15 +438,14 @@ class ProductResource extends Resource
                             ]),
 
                         Forms\Components\Section::make('Region')
-                            ->description('Regions this product is sold in. The card badge (NA, EU…) and country flag come from the first selected region.')
+                            ->description('The region for this product. The card badge (NA, EU…) and country flag come from the selected region.')
                             ->schema([
-                                Forms\Components\Select::make('regions')
-                                    ->label('Region(s)')
-                                    ->relationship('regions', 'name')
+                                Forms\Components\Select::make('region_id')
+                                    ->label('Region')
+                                    ->relationship('region', 'name')
                                     ->getOptionLabelFromRecordUsing(fn ($record) =>
                                         $record->code ? "{$record->name} ({$record->code})" : $record->name
                                     )
-                                    ->multiple()
                                     ->searchable()
                                     ->preload()
                                     ->native(false)
@@ -590,12 +589,10 @@ class ProductResource extends Resource
                     })
                     ->sortable(),
 
-                // Regions displayed as stacked badges (one per region code)
-                Tables\Columns\TextColumn::make('regions.code')
+                Tables\Columns\TextColumn::make('region.code')
                     ->label('Region')
                     ->badge()
                     ->color('info')
-                    ->separator(',')
                     ->sortable(false),
 
                 Tables\Columns\TextColumn::make('price')
@@ -624,9 +621,9 @@ class ProductResource extends Resource
                     ->relationship('accountType', 'name')
                     ->preload(),
 
-                Tables\Filters\SelectFilter::make('regions')
+                Tables\Filters\SelectFilter::make('region_id')
                     ->label('Region')
-                    ->relationship('regions', 'name')
+                    ->relationship('region', 'name')
                     ->preload(),
 
                 Tables\Filters\SelectFilter::make('section')
