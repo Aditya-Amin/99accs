@@ -32,5 +32,4 @@ jobs:
             php8.1 artisan view:cache
             php8.1 artisan filament:assets
 
-            sudo supervisorctl restart 99accs-worker:*
             echo "Laravel deployed OK"
