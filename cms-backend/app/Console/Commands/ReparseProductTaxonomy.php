@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\DB;
  * keywords, etc.) — without it, those products keep their old taxonomy and
  * the new patterns produce zero hits even though the source data matches.
  *
- * Updates: skin_ids, region_ids, account_type_id, section_id, feature_badges
- * Syncs:   product_region, product_skin pivots
+ * Updates: skin_ids, region_id, account_type_id, section_id, feature_badges
+ * Syncs:   product_skin pivot (region is a single FK, set directly)
  *
  * Game-level FKs (game_id) are only filled if currently null, since the
  * mapper's game detection is heuristic and we don't want to overwrite
@@ -66,7 +66,7 @@ class ReparseProductTaxonomy extends Command
         $bar->start();
 
         $query
-            ->select(['id', 'name', 'sku', 'legacy_categories', 'game_id', 'account_type_id', 'section_id', 'region_ids', 'skin_ids', 'feature_badges'])
+            ->select(['id', 'name', 'sku', 'legacy_categories', 'game_id', 'account_type_id', 'section_id', 'region_id', 'skin_ids', 'feature_badges'])
             ->orderBy('id')
             ->chunk(200, function ($products) use ($mapper, $dryRun, &$stats, &$autoCreatedSeen, $bar) {
                 foreach ($products as $product) {
@@ -86,23 +86,28 @@ class ReparseProductTaxonomy extends Command
                     }
 
                     $newRegionIds = $parsed['region_ids'] ?: [];
+                    $newRegionId  = $newRegionIds[0] ?? null; // single-region schema (region_id FK)
                     $newSkinIds   = $parsed['skin_ids']   ?: [];
 
-                    $regionChanged  = $this->idsDiffer($product->region_ids, $newRegionIds);
+                    // Only treat region as changed when we detected one — don't wipe a
+                    // manually-set region just because the heuristic found nothing.
+                    $regionChanged  = $newRegionId !== null && $product->region_id !== $newRegionId;
                     $skinChanged    = $this->idsDiffer($product->skin_ids,   $newSkinIds);
                     $accountChanged = $product->account_type_id !== $parsed['account_type_id'] && $parsed['account_type_id'] !== null;
                     $sectionChanged = $product->section_id      !== $parsed['section_id']      && $parsed['section_id']      !== null;
                     $badgesChanged  = json_encode($product->feature_badges ?? []) !== json_encode($parsed['feature_badges'] ?: []);
 
                     if (! $dryRun && ($regionChanged || $skinChanged || $accountChanged || $sectionChanged || $badgesChanged)) {
-                        DB::transaction(function () use ($product, $parsed, $newRegionIds, $newSkinIds) {
+                        DB::transaction(function () use ($product, $parsed, $newRegionId, $newSkinIds, $regionChanged) {
                             // Only set game_id when product currently has none — don't override
                             // manual corrections that may have already been done in admin.
                             $updates = [
-                                'region_ids'     => $newRegionIds ?: null,
-                                'skin_ids'       => $newSkinIds   ?: null,
+                                'skin_ids'       => $newSkinIds ?: null,
                                 'feature_badges' => $parsed['feature_badges'] ?: null,
                             ];
+                            if ($regionChanged) {
+                                $updates['region_id'] = $newRegionId;
+                            }
                             if ($product->game_id === null && $parsed['game_id'] !== null) {
                                 $updates['game_id'] = $parsed['game_id'];
                             }
@@ -114,7 +119,6 @@ class ReparseProductTaxonomy extends Command
                             }
                             $product->updateQuietly($updates);
 
-                            $product->regions()->sync($newRegionIds);
                             $product->skinTags()->sync($newSkinIds);
                         });
                     }
@@ -141,7 +145,7 @@ class ReparseProductTaxonomy extends Command
             ['Metric', 'Count'],
             [
                 ['Products with skin_ids changed',    $stats['updated_skin_ids']],
-                ['Products with region_ids changed',  $stats['updated_region_ids']],
+                ['Products with region changed',      $stats['updated_region_ids']],
                 ['Products with account_type changed', $stats['updated_account']],
                 ['Products with section changed',     $stats['updated_section']],
                 ['Products with feature_badges changed', $stats['updated_badges']],

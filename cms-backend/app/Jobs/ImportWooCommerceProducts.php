@@ -184,20 +184,23 @@ class ImportWooCommerceProducts implements ShouldQueue
                 return 'skipped';
             }
 
-            // ── Slug resolution ───────────────────────────────────────────────
-            // Priority order:
-            //   1. WP slug from the slugs CSV (preserves SEO) — IF it's clean ASCII
-            //   2. Str::slug(name) + '-' + legacy_id (clean, guaranteed unique)
+            // ── Slug: clean, title-based, deduped ─────────────────────────────
+            // The slug is derived purely from the product title — no legacy_id
+            // suffix. Because many products share near-identical titles (e.g.
+            // dozens of "NA – Inactive Account Verified"), we append -2, -3, …
+            // on collision so each slug stays unique.
             //
-            // Some WP slugs come URL-encoded for emoji titles, e.g.
-            //   "150-skins-inactive-na-%f0%9f%87%ba%f0%9f%87%b8"  (the 🇺🇸 flag)
-            // Those are ugly and indistinct in browsers/social shares — we regenerate
-            // them from the title instead. SEO continuity loss is minimal because
-            // emoji-encoded URLs never ranked well anyway and were rarely shared.
-            $wpSlug = $slugMap[$legacyId] ?? null;
-            $slug   = ($wpSlug && ! preg_match('/%[0-9a-f]{2}/i', $wpSlug))
-                ? $wpSlug
-                : (Str::slug($name) ?: 'product') . '-' . $legacyId;
+            // Idempotency: uniqueSlug() excludes this product's own row, and the
+            // CSV is read in a stable order, so re-imports keep the same slug
+            // (the first "title-x" stays "title-x", the second stays "title-x-2").
+            // This also rewrites the old "title-x-{id}" slugs to clean ones on
+            // the next run.
+            // Look up the existing row early — needed both for slug dedup (so a
+            // product keeps its own slug on re-import) and for the upsert below.
+            $existing = Product::where('legacy_id', $legacyId)->first();
+
+            $baseSlug = Str::slug($name) ?: 'product';
+            $slug     = $this->uniqueSlug($baseSlug, $existing?->id);
 
             // ── Pricing ───────────────────────────────────────────────────────
             $regularPrice = $this->parsePrice($data['Regular price'] ?? '');
@@ -239,6 +242,14 @@ class ImportWooCommerceProducts implements ShouldQueue
             $regionIds = $taxonomy['region_ids'] ?: [];
             $skinIds   = $taxonomy['skin_ids']   ?: [];
 
+            // Schema is now one region per product (region_id BelongsTo), but the
+            // mapper can return more than one (e.g. multi-region categories). Take
+            // the first as the primary and log when extras are dropped.
+            $primaryRegionId = $regionIds[0] ?? null;
+            if (count($regionIds) > 1) {
+                Log::info("ImportWooCommerceProducts: product {$legacyId} had " . count($regionIds) . " regions; keeping primary {$primaryRegionId}");
+            }
+
             // ── Persist (upsert by legacy_id, idempotent re-imports) ──────────
             $attributes = [
                 'legacy_id'            => $legacyId,
@@ -247,8 +258,9 @@ class ImportWooCommerceProducts implements ShouldQueue
                 'game_id'              => $taxonomy['game_id'],
                 'account_type_id'      => $taxonomy['account_type_id'],
                 'section_id'           => $taxonomy['section_id'],
-                // Denormalized JSON copies kept in sync with pivot tables below
-                'region_ids'           => $regionIds ?: null,
+                // Single primary region (FK). skin_ids stays denormalized in sync
+                // with the product_skin pivot synced below.
+                'region_id'            => $primaryRegionId,
                 'skin_ids'             => $skinIds   ?: null,
                 'feature_badges'       => $taxonomy['feature_badges'] ?: null,
                 // Core
@@ -275,7 +287,6 @@ class ImportWooCommerceProducts implements ShouldQueue
                 'synced_at'            => now(),
             ];
 
-            $existing = Product::where('legacy_id', $legacyId)->first();
             $isNew    = $existing === null;
             $product  = $existing ?? new Product();
             $product->fill($attributes);
@@ -286,10 +297,9 @@ class ImportWooCommerceProducts implements ShouldQueue
             }
             $product->save();
 
-            // ── Sync M:N pivot tables ─────────────────────────────────────────
-            // product_region: sync region IDs (replaces any prior regions)
-            $product->regions()->sync($regionIds);
-            // product_skin: sync skin tag IDs
+            // ── Sync M:N skin pivot ───────────────────────────────────────────
+            // region_id is set directly via fill() above (single-region schema).
+            // product_skin: sync skin tag IDs (replaces any prior tags).
             $product->skinTags()->sync($skinIds);
 
             // ── Queue per-product image download ─────────────────────────────
@@ -308,6 +318,31 @@ class ImportWooCommerceProducts implements ShouldQueue
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Build a unique, title-based slug. Returns $base if free, otherwise the
+     * first available "$base-2", "$base-3", … . The product's own row (when
+     * re-importing) is excluded so it can keep its current slug instead of
+     * bumping to the next suffix.
+     *
+     * Within a run, each product is saved before the next row is processed, so
+     * slugs assigned earlier in the same import are visible to this lookup.
+     */
+    private function uniqueSlug(string $base, ?int $ignoreId): string
+    {
+        $slug = $base;
+        $i    = 1;
+
+        while (
+            Product::where('slug', $slug)
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . (++$i);
+        }
+
+        return $slug;
+    }
 
     private function parsePrice(string $raw): ?float
     {

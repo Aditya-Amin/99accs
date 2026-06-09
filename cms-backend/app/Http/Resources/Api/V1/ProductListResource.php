@@ -32,7 +32,7 @@ class ProductListResource extends JsonResource
             'images'          => $this->resolveImages(),
             'has_gallery'     => (bool) $this->has_gallery,
             'badge_icon'      => $this->resolveStoredImageUrl($this->badge_icon),
-            'region'          => $this->regions->first()?->slug,
+            'region'          => $this->region?->slug,
             'rank'            => $this->rank,
             'agents'          => $this->agents ?? [],
             'skins'           => $this->skins ?? [],
@@ -54,7 +54,7 @@ class ProductListResource extends JsonResource
     //   • Admin uploads like "country-flags/abc.png"   — resolve to /storage/...
     protected function resolveCountry(): array
     {
-        $region = $this->regions->first();
+        $region = $this->region;
         if (! $region) {
             return ['code' => '', 'flag' => null, 'class_modifier' => null];
         }

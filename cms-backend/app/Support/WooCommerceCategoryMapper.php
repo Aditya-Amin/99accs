@@ -195,19 +195,15 @@ class WooCommerceCategoryMapper
                 continue;
             }
 
-            // ── LoL: parent = "LOL-EU&NE" | "LOL-NA" | "EU West" | "LOL EXC" ─
+            // ── LoL: the canonical Region is always one of the 5 global regions
+            // (na/eu/apac/latam/br). The precise LoL server (EUW/TR/LAS) is
+            // carried by the Section, not the Region — so EU West / EU&NE fold
+            // to 'eu' here. parent = "LOL-EU&NE" | "LOL-NA" | "EU West" | "LOL EXC".
             if (str_contains($p, 'lol') || str_contains($p, 'eu west')) {
-                if (str_contains($p, 'eu west') || str_contains($p, 'eu&we')) {
-                    $ids[] = $this->resolveRegionByCode('euw', 'EUW', '🇪🇺', 'euw');
+                if (str_contains($p, 'eu west') || str_contains($p, 'eu&we') || preg_match('/lol-eu/i', $p)) {
+                    $ids[] = $this->resolveRegionByCode('eu', 'EU', '🇪🇺', 'eu');
                 } elseif (preg_match('/lol-na\b/i', $p) || str_contains($p, 'lol-na')) {
                     $ids[] = $this->resolveRegionByCode('na', 'NA', '🇺🇸', 'na');
-                } elseif (preg_match('/lol-eu/i', $p)) {
-                    // LOL-EU&NE, LOL-EUW, etc.
-                    if (str_contains($p, 'west') || str_contains($p, 'euw')) {
-                        $ids[] = $this->resolveRegionByCode('euw', 'EUW', '🇪🇺', 'euw');
-                    } else {
-                        $ids[] = $this->resolveRegionByCode('eu', 'EU', '🇪🇺', 'eu');
-                    }
                 } elseif (str_contains($p, 'lol exc')) {
                     // Region is encoded in the child: "LAN EXC", "LAS EXC", "TURKEY EXC", etc.
                     $ids[] = $this->resolveRegionFromLolExcChild($c);
@@ -229,14 +225,16 @@ class WooCommerceCategoryMapper
 
     private function resolveRegionFromLolExcChild(string $child): ?int
     {
-        if (str_contains($child, 'lan '))                          return $this->resolveRegionByCode('latam', 'LATAM', '🌎', 'latam');
-        if (str_contains($child, 'las '))                          return $this->resolveRegionByCode('las',   'LAS',   '🌎', 'las');
+        // Fold LoL server tokens into the 5 canonical regions. The precise
+        // server (LAS / TR / EUW) is preserved on the Section, not the Region.
+        if (str_contains($child, 'lan ') || str_contains($child, 'las '))   return $this->resolveRegionByCode('latam', 'LATAM', '🌎', 'latam');
         if (str_contains($child, 'sea ') || str_contains($child, 'southeast') || str_contains($child, 'vietnam')) {
                                                                     return $this->resolveRegionByCode('apac',  'APAC',  '🌏', 'apac');
         }
-        if (str_contains($child, 'turkey'))                        return $this->resolveRegionByCode('tr',    'TR',    '🇹🇷', 'tr');
+        // Turkey (TR) servers sit in the EU / EMEA cluster — no canonical TR region.
+        if (str_contains($child, 'turkey'))                        return $this->resolveRegionByCode('eu', 'EU', '🇪🇺', 'eu');
         if (str_contains($child, 'eu west') || str_contains($child, 'eu&we') || str_contains($child, 'euw')) {
-                                                                    return $this->resolveRegionByCode('euw',   'EUW',   '🇪🇺', 'euw');
+                                                                    return $this->resolveRegionByCode('eu', 'EU', '🇪🇺', 'eu');
         }
         if (preg_match('/\bna\b/u', $child))                       return $this->resolveRegionByCode('na',    'NA',    '🇺🇸', 'na');
         if (preg_match('/\beu\b/u', $child))                       return $this->resolveRegionByCode('eu',    'EU',    '🇪🇺', 'eu');
@@ -253,12 +251,12 @@ class WooCommerceCategoryMapper
         return match (true) {
             $t === 'na' || str_contains($t, 'north america')        => $this->resolveRegionByCode('na',    'NA',    '🇺🇸', 'na'),
             $t === 'eu' || str_contains($t, 'europe')               => $this->resolveRegionByCode('eu',    'EU',    '🇪🇺', 'eu'),
-            $t === 'ap' || $t === 'asia pacific'                    => $this->resolveRegionByCode('ap',    'AP',    '🌏', 'ap'),
+            $t === 'ap' || $t === 'asia pacific'                    => $this->resolveRegionByCode('apac',  'AP',    '🌏', 'apac'),
             $t === 'br' || str_contains($t, 'brazil')               => $this->resolveRegionByCode('br',    'BR',    '🇧🇷', 'br'),
             $t === 'latam' || str_contains($t, 'latin')             => $this->resolveRegionByCode('latam', 'LATAM', '🌎', 'latam'),
-            $t === 'tr' || str_contains($t, 'turkey')               => $this->resolveRegionByCode('tr',    'TR',    '🇹🇷', 'tr'),
-            $t === 'las'                                             => $this->resolveRegionByCode('las',   'LAS',   '🌎', 'las'),
-            str_contains($t, 'eu west') || $t === 'euw'             => $this->resolveRegionByCode('euw',   'EUW',   '🇪🇺', 'euw'),
+            $t === 'tr' || str_contains($t, 'turkey')               => $this->resolveRegionByCode('eu',    'EU',    '🇪🇺', 'eu'),
+            $t === 'las'                                             => $this->resolveRegionByCode('latam', 'LATAM', '🌎', 'latam'),
+            str_contains($t, 'eu west') || $t === 'euw'             => $this->resolveRegionByCode('eu',    'EU',    '🇪🇺', 'eu'),
             default                                                  => null,
         };
     }
@@ -267,14 +265,13 @@ class WooCommerceCategoryMapper
     private function detectRegionsFromText(string $text): array
     {
         $ids = [];
-        if (str_contains($text, 'eu west') || preg_match('/\beuw\b/u', $text))  $ids[] = $this->resolveRegionByCode('euw',   'EUW',   '🇪🇺', 'euw');
+        // All tokens fold into the 5 canonical regions (na/eu/apac/latam/br).
         if (preg_match('/\bna\b/u', $text))                                       $ids[] = $this->resolveRegionByCode('na',    'NA',    '🇺🇸', 'na');
         if (preg_match('/\bbr\b/u', $text))                                       $ids[] = $this->resolveRegionByCode('br',    'BR',    '🇧🇷', 'br');
-        if (preg_match('/\bap\b/u', $text))                                       $ids[] = $this->resolveRegionByCode('ap',    'AP',    '🌏', 'ap');
-        if (preg_match('/\b(latam|lan)\b/u', $text))                              $ids[] = $this->resolveRegionByCode('latam', 'LATAM', '🌎', 'latam');
-        if (preg_match('/\btr\b/u', $text) || str_contains($text, 'turkey'))     $ids[] = $this->resolveRegionByCode('tr',    'TR',    '🇹🇷', 'tr');
-        if (preg_match('/\blas\b/u', $text))                                      $ids[] = $this->resolveRegionByCode('las',   'LAS',   '🌎', 'las');
-        if (! in_array($this->regions['euw'] ?? -1, $ids, true) && preg_match('/\beu\b/u', $text)) {
+        if (preg_match('/\bap\b/u', $text))                                       $ids[] = $this->resolveRegionByCode('apac',  'AP',    '🌏', 'apac');
+        if (preg_match('/\b(latam|lan|las)\b/u', $text))                          $ids[] = $this->resolveRegionByCode('latam', 'LATAM', '🌎', 'latam');
+        // EU covers EU / EUW / EU West / Turkey (TR servers are EMEA).
+        if (str_contains($text, 'eu west') || str_contains($text, 'turkey') || preg_match('/\b(eu|euw|tr)\b/u', $text)) {
             $ids[] = $this->resolveRegionByCode('eu', 'EU', '🇪🇺', 'eu');
         }
         return $ids;
@@ -303,29 +300,51 @@ class WooCommerceCategoryMapper
 
     private function detectAccountType(array $paths, ?int $gameId): ?int
     {
+        // ── Fortnite: type comes from the parent (FA / NFA) + child (inactive).
+        // Scan ALL paths first, because the export mixes a specific parent
+        // ("Fortnite FA" / "Fortnite NFA") with the combined "Fortnite NFA+FA"
+        // grouping category — the latter signals neither FA nor NFA and must be
+        // ignored. Seeded Fortnite types are 'nfa' and 'nfa_inactive'; 'fa'
+        // (Full Access) is auto-created on first use.
+        $isFortnite = false;
+        $fnInactive = false;
+        $fnFa       = false;
+        $fnNfa      = false;
+        foreach ($paths as [$parent, $child]) {
+            $p = strtolower($parent);
+            $c = strtolower($child);
+            if (! str_contains($p, 'fortnite')) {
+                continue;
+            }
+            $isFortnite = true;
+            if (str_contains($p, 'inactive') || str_contains($c, 'inactive')) {
+                $fnInactive = true;
+            }
+            // Ignore the grouping category — it isn't a real type signal.
+            if (str_contains($p, 'nfa+fa') || str_contains($p, 'nfa + fa')) {
+                continue;
+            }
+            // Word boundaries so "nfa" is NOT mis-read as "fa".
+            if (preg_match('/\bnfa\b/u', $p)) {
+                $fnNfa = true;
+            } elseif (preg_match('/\bfa\b/u', $p)) {
+                $fnFa = true;
+            }
+        }
+        if ($isFortnite) {
+            if ($fnInactive) return $this->resolveAccountType('nfa_inactive', 'NFA Inactive Accounts', $gameId);
+            if ($fnNfa)      return $this->resolveAccountType('nfa',          'NFA',                   $gameId);
+            if ($fnFa)       return $this->resolveAccountType('fa',           'Full Access',           $gameId);
+        }
+
+        // ── Valorant (child) and LoL (parent/child) ──────────────────────────
         foreach ($paths as [$parent, $child]) {
             $p = strtolower($parent);
             $c = strtolower($child);
 
-            // ── Fortnite: account type is in the parent ──────────────────────
-            if (str_contains($p, 'fortnite')) {
-                // NFA + child "Inactive-Exclusive" → inactive_exclusive
-                if (str_contains($p, 'nfa') && str_contains($c, 'inactive')) {
-                    return $this->resolveAccountType('inactive_exclusive', 'Inactive Exclusive', $gameId);
-                }
-                // FA = Full Access → our "verified"
-                if (str_contains($p, ' fa') || str_ends_with(trim($p), 'fa')) {
-                    return $this->resolveAccountType('verified', 'Verified', $gameId);
-                }
-                // NFA → our "nfa"
-                if (str_contains($p, 'nfa')) {
-                    return $this->resolveAccountType('nfa', 'NFA', $gameId);
-                }
-            }
-
             // ── Valorant: account type is in the child ───────────────────────
             if (str_contains($p, 'valorant') && $c !== '') {
-                if (str_contains($c, 'inactive account'))                      return $this->resolveAccountType('inactive_exclusive', 'Inactive Exclusive', $gameId);
+                if (str_contains($c, 'inactive account'))                      return $this->resolveAccountType('inactive_exclusive', 'Inactive / Exclusive', $gameId);
                 if (str_contains($c, 'guaranteed skin verified'))              return $this->resolveAccountType('verified', 'Verified', $gameId);
                 if (str_contains($c, 'skins verified'))                        return $this->resolveAccountType('verified', 'Verified', $gameId);
                 if (str_contains($c, 'rank'))                                  return $this->resolveAccountType('verified', 'Verified', $gameId);
@@ -339,7 +358,7 @@ class WooCommerceCategoryMapper
             if ((str_contains($p, 'lol') || str_contains($p, 'eu west')) && $c !== '') {
                 // "LOL EXC" parent = exclusive (inactive) accounts
                 if (str_contains($p, 'exc') || str_contains($c, 'exclusive mail access') || str_contains($c, 'exc ')) {
-                    return $this->resolveAccountType('inactive_exclusive', 'Inactive Exclusive', $gameId);
+                    return $this->resolveAccountType('inactive_exclusive', 'Inactive / Exclusive', $gameId);
                 }
                 // Standard sub-sections (champ, rank, skins) = verified accounts
                 if (str_contains($c, 'champ') || str_contains($c, 'rank') || str_contains($c, 'skin')) {
@@ -353,9 +372,11 @@ class WooCommerceCategoryMapper
 
     private function resolveAccountType(string $slug, string $name, ?int $gameId): ?int
     {
+        // Match strictly by game — never fall back to a bare-slug lookup, or a
+        // product would inherit a DIFFERENT game's account type (e.g. a Fortnite
+        // 'verified' borrowing Valorant's id). Missing per-game types are created.
         $gameKey = $gameId ? "{$gameId}:{$this->norm($slug)}" : null;
         if ($gameKey && isset($this->accountTypes[$gameKey]))  return $this->accountTypes[$gameKey];
-        if (isset($this->accountTypes[$this->norm($slug)]))    return $this->accountTypes[$this->norm($slug)];
 
         if (! $gameId) return null;
 
@@ -384,7 +405,7 @@ class WooCommerceCategoryMapper
             if (str_contains($p, 'fortnite')) {
                 if (str_contains($c, 'random skin'))                           return $this->resolveSection('nfa_random',          'NFA Random Skins',       $gameId);
                 if (str_contains($c, 'guarant') && str_contains($c, 'skin'))   return $this->resolveSection('nfa_guaranteed',       'NFA Guaranteed Skins',   $gameId);
-                if (str_contains($c, 'inactive') || str_contains($c, 'exclusive')) return $this->resolveSection('inactive_exclusive', 'Inactive Exclusive',   $gameId);
+                if (str_contains($c, 'inactive') || str_contains($c, 'exclusive')) return $this->resolveSection('nfa_inactive',     'NFA Inactive Accounts', $gameId);
                 // "Paid Skins" and "With Description" don't map to a specific section — leave null
             }
 
@@ -410,9 +431,10 @@ class WooCommerceCategoryMapper
 
     private function resolveSection(string $slug, string $label, ?int $gameId): ?int
     {
+        // Sections are unique per game ('verified' exists for both Valorant and
+        // Fortnite-era data) — match strictly by game, never by bare slug.
         $gameKey = $gameId ? "{$gameId}:{$this->norm($slug)}" : null;
         if ($gameKey && isset($this->sections[$gameKey]))  return $this->sections[$gameKey];
-        if (isset($this->sections[$this->norm($slug)]))    return $this->sections[$this->norm($slug)];
 
         if (! $gameId) return null;
 

@@ -12,10 +12,10 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     // Explicit column list for list queries; keeps eager loads lean.
-    // region_ids is the denormalized JSON; the full region records come via eager load.
+    // region_id is the FK; the full region record comes via the eager-loaded relation.
     private const LIST_COLUMNS = [
         'id', 'slug', 'game_id', 'account_type_id', 'section_id',
-        'region_ids',
+        'region_id',
         'name', 'price', 'regular_price',
         'feature_badges', 'images', 'has_gallery',
         'badge_icon',
@@ -33,7 +33,7 @@ class ProductController extends Controller
     {
         $query = Product::query()
             ->select(self::LIST_COLUMNS)
-            ->with(['game', 'accountType', 'section', 'regions'])
+            ->with(['game', 'accountType', 'section', 'region'])
             ->where('is_visible', true);
 
         if ($request->filled('game')) {
@@ -49,7 +49,7 @@ class ProductController extends Controller
         }
 
         if ($request->filled('region')) {
-            $query->whereHas('regions', fn ($q) => $q->where('slug', $request->string('region')));
+            $query->whereHas('region', fn ($q) => $q->where('slug', $request->string('region')));
         }
 
         // Skin filter — single-table JSON_CONTAINS, uses multi-value index
@@ -60,7 +60,7 @@ class ProductController extends Controller
 
         // Country badge filter — matches region.code (NA, EU, AP, EUW, LAS, TR…)
         if ($request->filled('country')) {
-            $query->whereHas('regions', fn ($q) =>
+            $query->whereHas('region', fn ($q) =>
                 $q->where('code', strtoupper($request->string('country')->toString()))
             );
         }
@@ -98,12 +98,12 @@ class ProductController extends Controller
     {
         $product = Product::where('slug', $slug)
             ->where('is_visible', true)
-            ->with(['game', 'accountType', 'section', 'regions'])
+            ->with(['game', 'accountType', 'section', 'region'])
             ->firstOrFail();
 
         $related = Product::query()
             ->select(self::LIST_COLUMNS)
-            ->with(['game', 'accountType', 'section', 'regions'])
+            ->with(['game', 'accountType', 'section', 'region'])
             ->where('is_visible', true)
             ->where('game_id', $product->game_id)
             ->where('id', '!=', $product->id)
