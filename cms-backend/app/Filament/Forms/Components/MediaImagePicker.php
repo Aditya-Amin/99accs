@@ -3,7 +3,6 @@
 namespace App\Filament\Forms\Components;
 
 use Filament\Forms\Components\Component;
-use Illuminate\View\ComponentAttributeBag;
 
 class MediaImagePicker extends Component
 {
@@ -14,6 +13,11 @@ class MediaImagePicker extends Component
     protected ?int $previewWidth = 300;
 
     protected ?int $previewHeight = 200;
+
+    public static function make(?string $name = null): self
+    {
+        return parent::make($name);
+    }
 
     public function buttonLabel(string $label): self
     {
