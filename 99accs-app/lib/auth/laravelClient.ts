@@ -3,8 +3,12 @@
 // every credential exchange goes Browser → Next.js BFF → Laravel, so the
 // Sanctum token can be set into an httpOnly cookie that JS cannot read.
 
+// These BFF handlers always run server-side, so prefer the local origin
+// (API_INTERNAL_BASE_URL, e.g. http://127.0.0.1:8080/api/v1) to bypass
+// Cloudflare/Varnish. LARAVEL_API_BASE_URL stays supported as an explicit override.
 const LARAVEL_BASE =
   process.env.LARAVEL_API_BASE_URL ??
+  process.env.API_INTERNAL_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   'http://localhost:8000/api/v1';
 

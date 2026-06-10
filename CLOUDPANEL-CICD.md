@@ -315,9 +315,22 @@ nano /home/user99accs/htdocs/backup.99accs.com/99accs-app/.env.local
 
 `.env.local`:
 ```dotenv
+# Public URL — used by the browser (goes through Cloudflare/Varnish).
 NEXT_PUBLIC_API_BASE_URL=https://backup.99accs.com/api/v1
 NEXT_PUBLIC_USE_MOCK=false
+
+# Server-only URL — used by SSR + BFF route handlers. Points at the local
+# PHP-FPM server block (:8080) so server-to-server calls bypass Cloudflare's
+# bot challenge and Varnish. Same host, so this is fast and never leaves the box.
+API_INTERNAL_BASE_URL=http://127.0.0.1:8080/api/v1
 ```
+
+> **Why:** Cloudflare's bot challenge ("Just a moment…") returns HTML to
+> server-to-server fetches, so SSR can't read the API over the public URL. Since
+> Next.js and Laravel share the host, SSR hits `127.0.0.1:8080` directly. The
+> `:8080` server block sets `HTTPS "on"`, so Laravel still builds correct https
+> URLs. Rebuild (`npm run build`) after adding this — it's read at runtime, but
+> rebuild + `pm2 restart` ensures the process picks it up.
 
 ```bash
 cd /home/user99accs/htdocs/backup.99accs.com/99accs-app

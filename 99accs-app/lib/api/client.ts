@@ -1,6 +1,18 @@
 import { ApiError as ApiErrorType } from './types';
 
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api/mock';
+// Server-side rendering and browser requests resolve the API differently.
+//
+// In production the public URL (https://backup.99accs.com/api/v1) goes through
+// Cloudflare, whose bot challenge breaks server-to-server fetches (SSR receives
+// the "Just a moment..." HTML instead of JSON). Since Next.js and Laravel run on
+// the same host, SSR should hit the local origin directly — bypassing Cloudflare
+// and Varnish. Set API_INTERNAL_BASE_URL (server-only, NOT NEXT_PUBLIC_) to e.g.
+// http://127.0.0.1:8080/api/v1. The browser keeps using NEXT_PUBLIC_API_BASE_URL.
+const IS_SERVER = typeof window === 'undefined';
+const BASE =
+  (IS_SERVER ? process.env.API_INTERNAL_BASE_URL : undefined) ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  'http://localhost:3000/api/mock';
 
 export class ApiError extends Error {
   constructor(public status: number, public body: ApiErrorType) {
