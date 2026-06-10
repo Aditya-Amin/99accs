@@ -18,7 +18,7 @@ class ProductController extends Controller
         'region_id',
         'name', 'price', 'regular_price',
         'feature_badges', 'images', 'has_gallery',
-        'badge_icon',
+        'badge_icon', 'featured_image_id', 'gallery_ids',
         'rank',
         'agents', 'skins', 'buddies',
         'description', 'highlights', 'specs',

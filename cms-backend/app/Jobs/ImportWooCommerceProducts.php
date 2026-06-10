@@ -276,7 +276,7 @@ class ImportWooCommerceProducts implements ShouldQueue
                 'price'                => $price,
                 'regular_price'        => $regularPrice ?? $price,
                 'stock_qty'            => $stockQty,
-                'is_visible'           => false,
+                'is_visible'           => true,
                 // SEO
                 'meta_title'           => $metaTitle,
                 'meta_description'     => $metaDesc,
