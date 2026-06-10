@@ -157,18 +157,21 @@
                                     </div>
                                 @endif
 
-                                {{-- Hover overlay: change (pencil) + remove (trash) --}}
+                                {{-- Hover overlay: edit (pencil → Curator edit screen) + remove (trash) --}}
                                 <div class="absolute inset-0 flex items-center justify-center gap-3 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-                                    <button
-                                        type="button"
-                                        wire:click="mountFormComponentAction('{{ $statePath }}', 'open_curator_picker')"
-                                        class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg transition hover:bg-primary-500 hover:text-white"
-                                        title="Change image"
-                                    >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
+                                    @if (! empty($item['id']))
+                                        <a
+                                            href="{{ \Awcodes\Curator\Resources\MediaResource::getUrl('edit', ['record' => $item['id']]) }}"
+                                            target="_blank"
+                                            rel="noopener"
+                                            class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg transition hover:bg-primary-500 hover:text-white"
+                                            title="Edit image (opens in a new tab)"
+                                        >
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </a>
+                                    @endif
                                     <button
                                         type="button"
                                         wire:click="mountFormComponentAction('{{ $statePath }}', 'remove', { uuid: '{{ $uuid }}' })"
