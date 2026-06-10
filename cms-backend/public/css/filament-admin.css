@@ -339,12 +339,12 @@
    7. TABLE ACTIONS — icon button styling
    ════════════════════════════════════════════════════════════════════ */
 
-/* Action cell — always fully visible */
+/* Action cell — always fully visible, comfortable spacing between buttons */
 .fi-ta-actions {
     opacity: 1 !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0.25rem !important;
+    gap: 0.5rem !important;
 }
 
 /* Icon-only buttons in table rows */
