@@ -73,8 +73,8 @@
                                 <div class="curator-picker-list-preview flex-shrink-0 h-12 w-12 checkered">
                                     @if (str($item['type'] ?? '')->contains('image'))
                                         <img
-                                            src="{{ $item['thumbnail_url'] ?? $item['url'] ?? '' }}"
-                                            alt="{{ $item['alt'] ?? $item['name'] ?? '' }}"
+                                            src="{{ $item['url'] ?? $item['thumbnail_url'] ?? '' }}"
+                                            alt="{{ $item['alt'] ?? $item['pretty_name'] ?? $item['name'] ?? '' }}"
                                             @if ($shouldLazyLoad()) loading="lazy" @endif
                                             @class([
                                                 'h-full',
@@ -130,8 +130,8 @@
                             >
                                 @if (str($item['type'] ?? '')->contains('image'))
                                     <img
-                                        src="{{ $item['large_url'] ?? $item['url'] ?? '' }}"
-                                        alt="{{ $item['alt'] ?? $item['name'] ?? '' }}"
+                                        src="{{ $item['url'] ?? $item['large_url'] ?? '' }}"
+                                        alt="{{ $item['alt'] ?? $item['pretty_name'] ?? $item['name'] ?? '' }}"
                                         @if ($shouldLazyLoad()) loading="lazy" @endif
                                         @class([
                                             'h-full',
