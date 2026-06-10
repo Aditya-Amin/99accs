@@ -14,8 +14,8 @@ https://backup.99accs.com
         Nginx :443
         │
         ├── /admin, /filament, /livewire, /_ignition  → direct :8080 → PHP-FPM → Laravel
-        ├── /api, /storage, /css, /js                 → Varnish → :8080 → PHP-FPM → Laravel
-        └── /*                                        → PM2 :3000 → Next.js
+        ├── /api/v1, /api/webhooks, /storage, /css, /js → Varnish → :8080 → PHP-FPM → Laravel
+        └── /*  (incl. /api/auth, /api/account, /api/checkout BFF) → PM2 :3000 → Next.js
 ```
 
 ```
@@ -108,8 +108,12 @@ server {
     proxy_read_timeout         720;
   }
 
-  # API, storage, Filament static assets — through Varnish (GET caching)
-  location ~ ^/(api|storage|css|js)(/|$) {
+  # Laravel API (v1 + webhooks), storage, Filament static assets — through Varnish (GET caching).
+  # IMPORTANT: only /api/v1 and /api/webhooks belong to Laravel. The other /api/*
+  # paths (/api/auth, /api/account, /api/checkout) are Next.js BFF route handlers
+  # and MUST fall through to the Next.js block below — otherwise Laravel 404s them
+  # (e.g. GET /api/auth/me → 404). Do not broaden this back to ^/(api|...).
+  location ~ ^/(api/v1|api/webhooks|storage|css|js)(/|$) {
     {{varnish_proxy_pass}}
     proxy_set_header Host $http_host;
     proxy_set_header X-Forwarded-Host $http_host;
