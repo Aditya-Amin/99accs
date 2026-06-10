@@ -123,9 +123,9 @@
                         @else
                             <div
                                 @class([
-                                    'group relative flex items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm checkered dark:bg-gray-800 dark:border-gray-700 dark:text-white',
-                                    'h-56 w-56' => ! $isMultiple,
-                                    'h-56 w-full md:flex-1' => $isMultiple,
+                                    'curator-preview group relative flex items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm checkered dark:bg-gray-800 dark:border-gray-700 dark:text-white',
+                                    'curator-preview--single' => ! $isMultiple,
+                                    'curator-preview--multiple md:flex-1' => $isMultiple,
                                 ])
                             >
                                 @if (str($item['type'] ?? '')->contains('image'))
@@ -133,11 +133,7 @@
                                         src="{{ $item['url'] ?? $item['large_url'] ?? '' }}"
                                         alt="{{ $item['alt'] ?? $item['pretty_name'] ?? $item['name'] ?? '' }}"
                                         @if ($shouldLazyLoad()) loading="lazy" @endif
-                                        @class([
-                                            'max-h-full max-w-full p-3',
-                                            'object-contain' => $isConstrained() || ! $isMultiple,
-                                            'h-full w-full object-cover p-0' => $isMultiple && ! $isConstrained(),
-                                        ])
+                                        class="curator-preview-img"
                                     />
                                 @elseif (str($item['type'] ?? '')->contains('video'))
                                     <video controls src="{{ $item['url'] ?? '' }}" class="h-full w-full" @if ($shouldLazyLoad()) preload="none" @endif></video>
@@ -157,17 +153,19 @@
                                     </div>
                                 @endif
 
-                                {{-- Hover overlay: edit (pencil → Curator edit screen) + remove (trash) --}}
-                                <div class="absolute inset-0 flex items-center justify-center gap-3 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                                {{-- Hover overlay: edit (pencil → Curator edit screen) + remove (trash).
+                                     Reveal is driven by .curator-preview:hover in filament-admin.css,
+                                     not Tailwind group-hover (which isn't in the compiled CSS). --}}
+                                <div class="curator-preview-actions">
                                     @if (! empty($item['id']))
                                         <a
                                             href="{{ \Awcodes\Curator\Resources\MediaResource::getUrl('edit', ['record' => $item['id']]) }}"
                                             target="_blank"
                                             rel="noopener"
-                                            class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg transition hover:bg-primary-500 hover:text-white"
+                                            class="curator-preview-btn curator-preview-btn--edit"
                                             title="Edit image (opens in a new tab)"
                                         >
-                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                         </a>
@@ -175,10 +173,10 @@
                                     <button
                                         type="button"
                                         wire:click="mountFormComponentAction('{{ $statePath }}', 'remove', { uuid: '{{ $uuid }}' })"
-                                        class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-red-600 shadow-lg transition hover:bg-red-600 hover:text-white"
+                                        class="curator-preview-btn curator-preview-btn--remove"
                                         title="Remove image"
                                     >
-                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                                         </svg>
                                     </button>

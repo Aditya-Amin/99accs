@@ -539,40 +539,91 @@
 }
 
 
-/* ── B. PICKER FIELD — selected items shown below the open button ── */
+/* ── B. PICKER FIELD — preview with hover edit/remove overlay ──
+   Matches the custom picker view (resources/views/vendor/curator/.../picker.blade.php).
+   The hover reveal is driven here in real CSS, NOT Tailwind's group-hover utility
+   (which isn't part of Filament's compiled stylesheet). */
 
-.curator-media-picker li > div.relative.block {
-    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+/* Preview box sizing */
+.curator-preview--single {
+    width: 224px !important;
+    height: 224px !important;
 }
-.curator-media-picker li > div.relative.block:hover {
-    border-color: rgba(245,158,11,0.4) !important;
-    box-shadow: 0 2px 10px rgba(245,158,11,0.12) !important;
+.curator-preview--multiple {
+    width: 100% !important;
+    height: 224px !important;
 }
-.curator-media-picker .absolute.top-0.right-0 > div {
-    background: rgba(8,12,24,0.68) !important;
-    backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important;
-    border-radius: 0 8px 0 12px !important; border: none !important;
-    padding: 3px 4px !important; gap: 2px !important;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+.curator-preview-img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    padding: 0.75rem !important;
 }
-.curator-media-picker .absolute.top-0.right-0 > div > div { border-left: none !important; }
-.curator-media-picker .absolute.top-0.right-0 .fi-ac-group-trigger,
-.curator-media-picker .absolute.top-0.right-0 [type="button"]:not([class*="fi-icon-btn"]) {
-    color: rgba(255,255,255,0.88) !important; border-radius: 7px !important;
-    transition: color 0.15s ease, background 0.15s ease !important;
+.curator-preview--multiple .curator-preview-img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    padding: 0 !important;
 }
-.curator-media-picker .absolute.top-0.right-0 .fi-ac-group-trigger:hover,
-.curator-media-picker .absolute.top-0.right-0 [type="button"]:not([class*="fi-icon-btn"]):hover {
-    color: #fff !important; background: rgba(245,158,11,0.28) !important;
+
+/* Hover overlay — revealed when hovering the preview box */
+.curator-preview-actions {
+    position: absolute !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.75rem !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+    z-index: 10;
 }
-.curator-media-picker .absolute.top-0.right-0 .fi-icon-btn {
-    color: rgba(255,255,255,0.88) !important; border: none !important;
-    border-radius: 7px !important; background: transparent !important;
-    transition: color 0.15s ease, background 0.15s ease !important;
+.curator-preview:hover .curator-preview-actions,
+.curator-preview:focus-within .curator-preview-actions {
+    opacity: 1;
+    visibility: visible;
 }
-.curator-media-picker .absolute.top-0.right-0 .fi-icon-btn:hover {
-    color: #fff !important; background: rgba(245,158,11,0.28) !important;
+
+/* Circular icon buttons (edit / remove) */
+.curator-preview-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
 }
+.curator-preview-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.curator-preview-btn:hover {
+    transform: scale(1.08);
+}
+.curator-preview-btn--edit {
+    color: rgb(161, 98, 7);
+    text-decoration: none;
+}
+.curator-preview-btn--edit:hover {
+    background: rgb(245, 158, 11);
+    color: #fff;
+}
+.curator-preview-btn--remove {
+    color: rgb(220, 38, 38);
+}
+.curator-preview-btn--remove:hover {
+    background: rgb(220, 38, 38);
+    color: #fff;
+}
+
+/* List-display thumbnails (multiple, list mode) */
 .curator-picker-list-preview {
     width: 40px !important; height: 40px !important;
     min-width: 40px !important; flex-shrink: 0 !important;
@@ -583,23 +634,6 @@
     width: 100% !important; height: 100% !important; object-fit: contain !important;
 }
 .curator-picker-list-details p { font-size: 11px !important; line-height: 1.4 !important; }
-.curator-media-picker ul > li > div.checkered {
-    width: 300px !important; max-width: 300px !important; height: 300px !important;
-    margin-left: auto !important; margin-right: auto !important;
-}
-.curator-media-picker ul > li > div.checkered img {
-    width: 100% !important; height: 100% !important; object-fit: contain !important;
-}
-.curator-picker-trigger { transition: border-color 0.15s ease, box-shadow 0.15s ease !important; }
-.curator-picker-trigger:hover {
-    border-color: rgb(245,158,11) !important;
-    box-shadow: 0 0 0 3px rgba(245,158,11,0.12) !important;
-}
-.curator-picker-selected-thumb {
-    border-radius: 8px !important; overflow: hidden !important;
-    border: 2px solid rgba(245,158,11,0.3) !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08) !important;
-}
 
 
 /* ══════════════════════════════════════════════════════════════════════
