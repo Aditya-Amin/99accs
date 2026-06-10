@@ -48,6 +48,9 @@ class GameResource extends Resource
                     ->label('Preview')
                     ->content(function (Forms\Get $get, $record): \Illuminate\Support\HtmlString {
                         $val = $get('icon') ?? $record?->icon;
+                        if (is_array($val)) {
+                            $val = $val[0] ?? null;
+                        }
                         if (! $val) {
                             return new \Illuminate\Support\HtmlString('<span style="color:#9ca3af">No icon set</span>');
                         }
@@ -130,6 +133,9 @@ class GameResource extends Resource
 
     private static function resolveMediaUrl(mixed $val): ?string
     {
+        if (is_array($val)) {
+            $val = $val[0] ?? null;
+        }
         if (!$val) return null;
         if (ctype_digit((string) $val)) {
             return \App\Models\CuratorMedia::find((int) $val)?->url;
