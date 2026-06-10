@@ -1,7 +1,7 @@
 // Server-side data layer for Server Components.
 // Import from here — never from @/lib/api/endpoints — in any page.tsx / layout.tsx.
 // When NEXT_PUBLIC_USE_MOCK=true  → reads mock JSON directly (no HTTP roundtrip).
-// When NEXT_PUBLIC_USE_MOCK=false → calls the real Laravel API via endpoints.ts.
+// When unset or NEXT_PUBLIC_USE_MOCK=false → calls the real Laravel API via endpoints.ts.
 import type {
   ApiCollection,
   ApiResource,
@@ -15,7 +15,7 @@ import type { ProductFilters } from './endpoints';
 
 export type { ProductFilters };
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== 'false';
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
 
 // ── Home ─────────────────────────────────────────────────────────────────────
 
@@ -68,14 +68,25 @@ export async function getFooter(): Promise<ApiResource<FooterData>> {
 
 // ── Products ──────────────────────────────────────────────────────────────────
 
+const EMPTY_COLLECTION: ApiCollection<never> = {
+  data: [],
+  meta: { current_page: 1, last_page: 1, per_page: 48, total: 0 },
+  links: { first: null, last: null, next: null, prev: null },
+};
+
 export async function getProducts(filters: ProductFilters = {}): Promise<ApiCollection<Product>> {
   if (USE_MOCK) {
     const { getMockProducts } = await import('@/lib/mock/products');
     const result = getMockProducts(filters);
     return { ...result, links: { first: null, last: null, next: null, prev: null } } as ApiCollection<Product>;
   }
-  const { getProducts: _fn } = await import('./endpoints');
-  return _fn(filters);
+  try {
+    const { getProducts: _fn } = await import('./endpoints');
+    return await _fn(filters);
+  } catch (err) {
+    console.error('[getProducts] API error:', err);
+    return EMPTY_COLLECTION as ApiCollection<Product>;
+  }
 }
 
 export async function getProduct(slug: string): Promise<ApiResource<Product>> {
