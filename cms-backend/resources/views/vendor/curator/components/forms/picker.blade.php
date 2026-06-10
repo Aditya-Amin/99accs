@@ -123,9 +123,9 @@
                         @else
                             <div
                                 @class([
-                                    'group relative block w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm flex justify-center checkered dark:bg-gray-800 dark:border-gray-700 dark:text-white',
-                                    'h-64' => ! str($item['type'] ?? '')->contains('video'),
-                                    'md:flex-1' => $itemsCount <= 3,
+                                    'group relative flex items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 shadow-sm checkered dark:bg-gray-800 dark:border-gray-700 dark:text-white',
+                                    'h-56 w-56' => ! $isMultiple,
+                                    'h-56 w-full md:flex-1' => $isMultiple,
                                 ])
                             >
                                 @if (str($item['type'] ?? '')->contains('image'))
@@ -134,13 +134,13 @@
                                         alt="{{ $item['alt'] ?? $item['pretty_name'] ?? $item['name'] ?? '' }}"
                                         @if ($shouldLazyLoad()) loading="lazy" @endif
                                         @class([
-                                            'h-full',
-                                            'object-contain' => $isConstrained(),
-                                            'object-cover w-full' => ! $isConstrained(),
+                                            'max-h-full max-w-full p-3',
+                                            'object-contain' => $isConstrained() || ! $isMultiple,
+                                            'h-full w-full object-cover p-0' => $isMultiple && ! $isConstrained(),
                                         ])
                                     />
                                 @elseif (str($item['type'] ?? '')->contains('video'))
-                                    <video controls src="{{ $item['url'] ?? '' }}" @if ($shouldLazyLoad()) preload="none" @endif></video>
+                                    <video controls src="{{ $item['url'] ?? '' }}" class="h-full w-full" @if ($shouldLazyLoad()) preload="none" @endif></video>
                                 @else
                                     <x-curator::document-image
                                         label="{{ $item['name'] ?? '' }}"
@@ -150,51 +150,54 @@
                                     />
                                 @endif
 
-                                {{-- Hover action bar (edit / download / remove) --}}
-                                <div class="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
-                                    <div class="relative flex items-center divide-x divide-white/20 rounded-lg bg-gray-900/80 shadow-md backdrop-blur">
-                                        @if ($isMultiple)
-                                            <div x-sortable-handle class="flex items-center justify-center flex-none w-9 h-9 text-gray-300 transition hover:text-white">
-                                                {{ $getAction('reorder') }}
-                                            </div>
-                                        @endif
-                                        <div class="flex items-center justify-center flex-none w-9 h-9">
-                                            <x-filament-actions::group
-                                                :actions="[
-                                                    $getAction('view')(['url' => $item['url'] ?? '#']),
-                                                    $getAction('edit')(['id' => $item['id'] ?? null]),
-                                                    $getAction('download')(['uuid' => $uuid]),
-                                                    $getAction('remove')(['uuid' => $uuid]),
-                                                ]"
-                                                color="gray"
-                                                size="xs"
-                                                dropdown-placement="bottom-end"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                @if (! str($item['type'] ?? '')->contains('video'))
-                                    <div class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-gradient-to-t from-black/80 to-transparent px-3 pt-10 pb-2 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                        <p class="truncate">{{ $item['pretty_name'] ?? $item['name'] ?? '' }}</p>
-                                        <p class="flex-shrink-0">{{ $item['size_for_humans'] ?? '' }}</p>
+                                {{-- Reorder handle (multiple only) --}}
+                                @if ($isMultiple)
+                                    <div x-sortable-handle class="absolute top-2 left-2 flex h-9 w-9 items-center justify-center rounded-lg bg-gray-900/70 text-gray-200 opacity-0 shadow transition hover:text-white group-hover:opacity-100" style="cursor: move;">
+                                        {{ $getAction('reorder') }}
                                     </div>
                                 @endif
+
+                                {{-- Hover overlay: change (pencil) + remove (trash) --}}
+                                <div class="absolute inset-0 flex items-center justify-center gap-3 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <button
+                                        type="button"
+                                        wire:click="mountFormComponentAction('{{ $statePath }}', 'open_curator_picker')"
+                                        class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-gray-700 shadow-lg transition hover:bg-primary-500 hover:text-white"
+                                        title="Change image"
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        wire:click="mountFormComponentAction('{{ $statePath }}', 'remove', { uuid: '{{ $uuid }}' })"
+                                        class="flex h-11 w-11 items-center justify-center rounded-full bg-white text-red-600 shadow-lg transition hover:bg-red-600 hover:text-white"
+                                        title="Remove image"
+                                    >
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         @endif
                     </li>
                 @endforeach
             </ul>
 
-            {{-- Footer: add more (multiple) / change (single) / clear all --}}
-            <div @class(['flex items-center gap-3', 'mt-4' => $itemsCount > 0])>
-                @if (($isMultiple && $canAddMore) || (! $isMultiple))
-                    {{ $getAction('open_curator_picker') }}
-                @endif
-                @if ($itemsCount > 1)
-                    {{ $getAction('removeAll') }}
-                @endif
-            </div>
+            {{-- Footer (multiple only): add more / clear all.
+                 Single image uses the hover pencil/trash overlay, so no footer. --}}
+            @if ($isMultiple)
+                <div class="mt-4 flex items-center gap-3">
+                    @if ($canAddMore)
+                        {{ $getAction('open_curator_picker') }}
+                    @endif
+                    @if ($itemsCount > 1)
+                        {{ $getAction('removeAll') }}
+                    @endif
+                </div>
+            @endif
         @endif
     </div>
 </x-dynamic-component>
