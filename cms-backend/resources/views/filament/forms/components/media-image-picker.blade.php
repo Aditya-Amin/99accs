@@ -16,15 +16,12 @@
             $imageUrl = (string) $value;
         }
     }
-
-    $width = $getComponent()->getPreviewWidth();
-    $height = $getComponent()->getPreviewHeight();
 @endphp
 
 <div x-data="{ imageUrl: @js($imageUrl) }" class="space-y-2">
     <!-- Preview Area -->
     <div class="overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-gray-50"
-         style="width: {{ $width }}px; height: {{ $height }}px;">
+         style="width: {{ $previewWidth }}px; height: {{ $previewHeight }}px;">
 
         <template x-if="imageUrl">
             <div class="relative h-full w-full group cursor-pointer">
