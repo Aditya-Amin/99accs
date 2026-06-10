@@ -38,11 +38,10 @@ class GameResource extends Resource
                     ->maxLength(255)
                     ->helperText('URL-safe identifier, e.g. valorant'),
 
-                Forms\Components\TextInput::make('icon')
+                \Awcodes\Curator\Components\Forms\CuratorPicker::make('icon')
                     ->label('Icon')
-                    ->placeholder('/img/icons/valorant.svg')
-                    ->helperText('Public path or Curator media ID')
-                    ->live(debounce: 500)
+                    ->buttonLabel('Select or upload icon')
+                    ->live()
                     ->columnSpan(1),
 
                 Forms\Components\Placeholder::make('icon_preview')
@@ -135,7 +134,7 @@ class GameResource extends Resource
         if (ctype_digit((string) $val)) {
             return \App\Models\CuratorMedia::find((int) $val)?->url;
         }
-        return \Illuminate\Support\Facades\Storage::disk('public')->url($val);
+        return (string) $val;
     }
 
     public static function getRelations(): array
