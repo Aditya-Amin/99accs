@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Forms\Components\MediaImagePicker;
 use App\Filament\Resources\GameResource\Pages;
 use App\Models\Game;
 use Filament\Forms;
@@ -39,28 +38,19 @@ class GameResource extends Resource
                     ->maxLength(255)
                     ->helperText('URL-safe identifier, e.g. valorant'),
 
-                Forms\Components\Grid::make(2)
-                    ->schema([
-                        MediaImagePicker::make('icon')
-                            ->label('Icon')
-                            ->previewWidth(300)
-                            ->previewHeight(200)
-                            ->columnSpan(2),
+                \Awcodes\Curator\Components\Forms\CuratorPicker::make('icon')
+                    ->label('Icon')
+                    ->buttonLabel('Select or upload icon')
+                    ->constrained()
+                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/svg+xml', 'image/webp', 'image/gif'])
+                    ->columnSpan(1),
 
-                        \Awcodes\Curator\Components\Forms\CuratorPicker::make('icon')
-                            ->label('Select icon')
-                            ->buttonLabel('Open Media Library')
-                            ->live()
-                            ->dehydrated()
-                            ->columnSpan(1),
-
-                        Forms\Components\TextInput::make('sort_order')
-                            ->label('Sort Order')
-                            ->numeric()
-                            ->default(0)
-                            ->minValue(0)
-                            ->columnSpan(1),
-                    ]),
+                Forms\Components\TextInput::make('sort_order')
+                    ->label('Sort Order')
+                    ->numeric()
+                    ->default(0)
+                    ->minValue(0)
+                    ->columnSpan(1),
             ])
             ->columns(2);
     }
