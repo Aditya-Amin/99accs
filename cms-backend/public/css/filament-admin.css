@@ -344,7 +344,7 @@
     opacity: 1 !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0.5rem !important;
+    gap: 1.5rem !important;
 }
 
 /* Icon-only buttons in table rows */
