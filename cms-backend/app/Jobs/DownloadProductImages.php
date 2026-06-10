@@ -8,8 +8,9 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
+use Illuminate\Support\Str;
 
 class DownloadProductImages implements ShouldQueue
 {
@@ -60,14 +61,33 @@ class DownloadProductImages implements ShouldQueue
                 : 'product_gallery';
 
             try {
-                $product->addMediaFromUrl($url)
+                // Download ourselves with a browser-like User-Agent + Referer.
+                // Spatie's addMediaFromUrl() sends a generic UA that WAFs/CDNs
+                // (Cloudflare, hotlink protection) on the source host commonly
+                // block — yielding 403/406 and zero images. A real UA + a
+                // same-origin Referer gets past the typical bot filters.
+                $referer  = $this->originOf($url);
+                $response = Http::withHeaders([
+                    'User-Agent'      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                    'Accept'          => 'image/avif,image/webp,image/apng,image/png,image/jpeg,image/svg+xml,*/*;q=0.8',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                    'Referer'         => $referer,
+                ])
+                    ->timeout(60)
+                    ->retry(2, 2000, throw: false)
+                    ->get($url);
+
+                if (! $response->successful() || $response->body() === '') {
+                    Log::warning("DownloadProductImages: HTTP {$response->status()} (".strlen($response->body())." bytes) url={$url} product={$this->productId}");
+                    continue;
+                }
+
+                $product->addMediaFromString($response->body())
+                    ->usingFileName($this->fileNameFromUrl($url))
                     ->withCustomProperties(['source_url' => $url])
                     ->toMediaCollection($collection);
-            } catch (FileCannotBeAdded $e) {
-                // 404, blocked UA, etc. — skip but log so we can audit later
-                Log::warning("DownloadProductImages: failed url={$url} product={$this->productId} — {$e->getMessage()}");
             } catch (\Throwable $e) {
-                Log::error("DownloadProductImages: unexpected error url={$url} product={$this->productId} — {$e->getMessage()}");
+                Log::warning("DownloadProductImages: failed url={$url} product={$this->productId} — {$e->getMessage()}");
             }
         }
 
@@ -78,5 +98,31 @@ class DownloadProductImages implements ShouldQueue
         if ($totalImages > 1 && ! $product->has_gallery) {
             $product->updateQuietly(['has_gallery' => true]);
         }
+    }
+
+    /** scheme://host of a URL, used as a same-origin Referer to satisfy hotlink protection. */
+    private function originOf(string $url): string
+    {
+        $parts = parse_url($url);
+        $scheme = $parts['scheme'] ?? 'https';
+        $host   = $parts['host'] ?? '';
+        return $host !== '' ? "{$scheme}://{$host}/" : $url;
+    }
+
+    /** Derive a clean, extension-preserving file name from the source URL. */
+    private function fileNameFromUrl(string $url): string
+    {
+        $name = basename(parse_url($url, PHP_URL_PATH) ?: '');
+        $name = urldecode($name);
+
+        if ($name === '' || ! str_contains($name, '.')) {
+            return 'image-' . substr(md5($url), 0, 10) . '.jpg';
+        }
+
+        // Sanitise but keep the extension intact.
+        $ext  = Str::afterLast($name, '.');
+        $base = Str::slug(Str::beforeLast($name, '.')) ?: ('image-' . substr(md5($url), 0, 10));
+
+        return "{$base}.{$ext}";
     }
 }

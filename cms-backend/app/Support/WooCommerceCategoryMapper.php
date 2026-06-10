@@ -161,13 +161,40 @@ class WooCommerceCategoryMapper
     {
         foreach ($paths as [$parent]) {
             $p = strtolower($parent);
-            if (str_contains($p, 'valorant'))                                  return $this->games['valorant'] ?? null;
-            if (str_contains($p, 'fortnite'))                                  return $this->games['fortnite'] ?? null;
-            if (str_contains($p, 'lol') || str_contains($p, 'league'))        return $this->games['legends']  ?? null;
+            if (str_contains($p, 'valorant'))                            return $this->resolveGame('valorant', 'Valorant',          '/img/icons/header_cat01.svg', 1);
+            if (str_contains($p, 'fortnite'))                            return $this->resolveGame('fortnite', 'Fortnite',          '/img/icons/header_cat02.svg', 2);
+            if (str_contains($p, 'lol') || str_contains($p, 'league'))   return $this->resolveGame('legends',  'League of Legends', '/img/icons/header_cat03.svg', 3);
             // "EU West" parent without "Valorant" = LoL EU West sub-category
-            if (str_contains($p, 'eu west'))                                   return $this->games['legends']  ?? null;
+            if (str_contains($p, 'eu west'))                             return $this->resolveGame('legends',  'League of Legends', '/img/icons/header_cat03.svg', 3);
         }
         return null;
+    }
+
+    /**
+     * Resolve a game id by slug, creating the game if it doesn't exist yet.
+     * Games used to be seeded by migration, but the importer must not depend on
+     * that — when the games table is empty, every product would otherwise get a
+     * null game_id, which cascades to null account_type/section. Auto-creating
+     * here keeps the whole taxonomy chain populated. The icon/sort_order match
+     * the original seed so the storefront header renders correctly.
+     */
+    private function resolveGame(string $slug, string $name, string $icon, int $sortOrder): int
+    {
+        $key = $this->norm($slug);
+        if (isset($this->games[$key])) {
+            return $this->games[$key];
+        }
+
+        $game = Game::firstOrCreate(
+            ['slug' => $slug],
+            ['name' => $name, 'icon' => $icon, 'sort_order' => $sortOrder],
+        );
+
+        $this->games[$key]               = $game->id;
+        $this->games[$this->norm($name)] = $game->id;
+        $this->autoCreated[]             = "game:{$slug}";
+
+        return $game->id;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
