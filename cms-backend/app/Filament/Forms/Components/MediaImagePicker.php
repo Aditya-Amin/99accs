@@ -2,9 +2,9 @@
 
 namespace App\Filament\Forms\Components;
 
-use Filament\Forms\Components\Component;
+use Filament\Forms\Components\Field;
 
-class MediaImagePicker extends Component
+class MediaImagePicker extends Field
 {
     protected string $view = 'filament.forms.components.media-image-picker';
 
@@ -13,11 +13,6 @@ class MediaImagePicker extends Component
     protected ?int $previewWidth = 300;
 
     protected ?int $previewHeight = 200;
-
-    public static function make(?string $name = null): self
-    {
-        return parent::make($name);
-    }
 
     public function buttonLabel(string $label): self
     {
