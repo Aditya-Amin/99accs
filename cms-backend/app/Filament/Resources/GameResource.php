@@ -38,8 +38,33 @@ class GameResource extends Resource
                     ->maxLength(255)
                     ->helperText('URL-safe identifier, e.g. valorant'),
 
-                \Awcodes\Curator\Components\Forms\CuratorPicker::make('icon')
+                Forms\Components\TextInput::make('icon')
                     ->label('Icon')
+                    ->placeholder('/img/icons/valorant.svg')
+                    ->helperText('Public path or Curator media ID')
+                    ->live(debounce: 500)
+                    ->columnSpan(1),
+
+                Forms\Components\Placeholder::make('icon_preview')
+                    ->label('Preview')
+                    ->content(function (Forms\Get $get, $record): \Illuminate\Support\HtmlString {
+                        $val = $get('icon') ?? $record?->icon;
+                        if (! $val) {
+                            return new \Illuminate\Support\HtmlString('<span style="color:#9ca3af">No icon set</span>');
+                        }
+                        $url = ctype_digit((string) $val)
+                            ? (\App\Models\CuratorMedia::find((int) $val)?->url ?? '')
+                            : (string) $val;
+                        if (! $url) {
+                            return new \Illuminate\Support\HtmlString('<span style="color:#9ca3af">Not found</span>');
+                        }
+                        return new \Illuminate\Support\HtmlString(
+                            '<div style="display:inline-flex;align-items:center;justify-content:center;'
+                            . 'width:64px;height:64px;background:rgba(99,102,241,.1);border-radius:8px;border:1px solid rgba(99,102,241,.2);">'
+                            . '<img src="' . e($url) . '" alt="icon" style="max-width:44px;max-height:44px;object-fit:contain;" />'
+                            . '</div>'
+                        );
+                    })
                     ->columnSpan(1),
 
                 Forms\Components\TextInput::make('sort_order')
@@ -47,6 +72,11 @@ class GameResource extends Resource
                     ->numeric()
                     ->default(0)
                     ->minValue(0)
+                    ->columnSpan(1),
+
+                Forms\Components\Placeholder::make('_spacer')
+                    ->label('')
+                    ->content('')
                     ->columnSpan(1),
             ])
             ->columns(2);
