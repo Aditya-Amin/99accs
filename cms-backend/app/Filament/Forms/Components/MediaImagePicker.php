@@ -47,7 +47,7 @@ class MediaImagePicker extends Field
         return $this->previewHeight ?? 200;
     }
 
-    protected function getViewData(): array
+    public function getViewData(): array
     {
         return array_merge(parent::getViewData(), [
             'previewWidth' => $this->getPreviewWidth(),
